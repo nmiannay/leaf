@@ -2,76 +2,63 @@
 /**
 *
 */
-abstract class Parser
+abstract class Parser extends \SplFileObject
 {
-  private $content;
-  private $line_nb      = 0;
-  private $char_nb      = 0;
-  // private $FileObject;
 
+  protected $charno       = 0;
+  protected $line         = '';
   protected $stack_length = 0;
   protected $stack        = array();
-  protected $inCode       = true;
 
   const UNEXPECTED_TOKEN = 1;
-  const UNEXPECTED_EOF   = 2;
-  const UNEXPECTED_EOL   = 3;
-  const ILLEGAL_OFFSET   = 4;
-  const EOF              = -2;
+  const UNEXPECTED_EOL   = 2;
 
   abstract protected function addToStack($Node, $depth);
-  protected function __construct($content)
+  public function __construct($filename)
   {
-    $this->content = $content;
-  }
-
-  protected static function fileParser($filename)
-  {
-    // $this->FileObject = new SplFileObject($filename);
-    // $this->FileObject->setFlags(SplFileObject::SKIP_EMPTY | SplFileObject::DROP_NEW_LINE);
-    if (!file_exists($filename)) {
-      throw new \Exception(sprintf("Error cannot open file '%s'", $filename), 1);
-    }
-    if (!is_readable($filename)) {
-      throw new \Exception(sprintf("Error cannot read file '%s'", $filename), 1);
-    }
-    return (@file($filename, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES));
-  }
-  protected static function strParser($str)
-  {
-    return (@file($str, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES));
+    parent::__construct($filename);
+    $this->setFlags(SplFileObject::DROP_NEW_LINE);
+    $this->line = parent::current();
   }
 
   protected function eatSequence($seq)
   {
-    for ($i = 0; isset($req[$i]); $i++)
-    {
+    for ($i = 0; isset($req[$i]); $i++) {
       $this->eat($req[$i]);
     }
   }
 
+  /*
+  * @brief Eat a character if it appear in the $accept string
+  */
   protected function eat($accept = null)
   {
-    if (isset($this->content[$this->line_nb][$this->char_nb])) {
-      if ($accept !== null && !strpbrk($this->content[$this->line_nb][$this->char_nb], $accept)) {
-        throw new \Exception(sprintf("Parse error: syntax error, unexpected '%s'", $this->content[$this->line_nb][$this->char_nb]), Parser::UNEXPECTED_EOL);
+    if (isset($this->line[$this->charno])) {
+      if ($accept !== null && !strpbrk($this->line[$this->charno], $accept)) {
+        throw new \Exception(sprintf("Parse error: syntax error on line %d, unexpected '%s'", $this->key() + 1, $this->line[$this->charno]), Parser::UNEXPECTED_TOKEN);
       }
-      return ($this->content[$this->line_nb][$this->char_nb++]);
+      return ($this->line[$this->charno++]);
     }
     return (PHP_EOL);
   }
 
+  /*
+  * @brief Eat a character if it doesn't appear in the $accept string
+  */
   protected function puke($accept = null)
   {
-    if (isset($this->content[$this->line_nb][$this->char_nb])) {
-      if ($accept !== null && strpbrk($this->content[$this->line_nb][$this->char_nb], $accept)) {
-        throw new \Exception(sprintf("Parse error: syntax error, unexpected '%s'", $this->content[$this->line_nb][$this->char_nb]), Parser::UNEXPECTED_EOL);
+    if (isset($this->line[$this->charno])) {
+      if ($accept !== null && strpbrk($this->line[$this->charno], $accept)) {
+        throw new \Exception(sprintf("Parse error: syntax error on line %d, unexpected '%s'", $this->key() + 1, $this->line[$this->charno]), Parser::UNEXPECTED_TOKEN);
       }
-      return ($this->content[$this->line_nb][$this->char_nb++]);
+      return ($this->line[$this->charno++]);
     }
     return (PHP_EOL);
   }
 
+  /*
+  * @brief Eat character until it appear in the $until string
+  */
   protected function eatUntil($until, $accept = null)
   {
     $str = '';
@@ -82,13 +69,12 @@ abstract class Parser
       $c = $this->eat($accept);
     }
     if ($c === PHP_EOL && !strpbrk(PHP_EOL, $until)) {
-      // var_dump(substr($this->content[$this->line_nb], $this->char_nb), $until, $this->lookBehind());
-      throw new \Exception(sprintf("Parse error: syntax error, unexpected end of line %d", $this->line_nb + 1), Parser::UNEXPECTED_EOL);
+      throw new \Exception(sprintf("Parse error: syntax error on line %d, unexpected end of line", $this->key() + 1), Parser::UNEXPECTED_EOL);
     }
     return ($str);
   }
   /*
-  * @brief Eat char while it is in while string
+  * @brief Eat character while it appear in the $while string
   */
   protected function eatWhile($while)
   {
@@ -102,8 +88,9 @@ abstract class Parser
     }
     return ($str);
   }
+
   /*
-  * @brief Skip char while it is in trim string
+  * @brief Trim string from left while character is in array
   */
   protected function trim($trim)
   {
@@ -119,58 +106,26 @@ abstract class Parser
     return ($counter);
   }
   /*
-  * @brief Look to the next char
+  * @brief Look to the next character
   */
   protected function lookAhead($n = 0)
   {
-    if (isset($this->content[$this->line_nb][$this->char_nb + $n])) {
-      return ($this->content[$this->line_nb][$this->char_nb + $n]);
-    }
-    return (PHP_EOL);
+    return (isset($this->line[$this->charno + $n]) ? $this->line[$this->charno + $n] : PHP_EOL);
   }
+
   /*
-  * @brief Rewind current position
-  */
-  protected function rewind($n = 1)
-  {
-    if (isset($this->content[$this->line_nb][$this->char_nb - $n])) {
-      $this->char_nb -= $n;
-      return ($this->content[$this->line_nb][$this->char_nb]);
-    }
-    return (PHP_EOL);
-  }
-  /*
-  * @brief Look to the previous char
+  * @brief Look to the previous character
   */
   protected function lookBehind($n = 1)
   {
-    if (isset($this->content[$this->line_nb][$this->char_nb - $n])) {
-      return ($this->content[$this->line_nb][$this->char_nb - $n]);
-    }
-    return (false);
+    return (isset($this->line[$this->charno - $n]) ? $this->line[$this->charno - $n] : false);
   }
-  /*
-  * @brief Get next line
-  */
-  protected function getNextLine()
+  public function next()
   {
-    if (isset($this->content[$this->line_nb + 1])) {
-      $this->char_nb = 0;
-      return ($this->content[++$this->line_nb]);
-    }
-    return (Parser::EOF);
+    $this->charno = 0;
+    parent::next();
+    $this->line = parent::current();
   }
-  /*
-  * @brief Get current line
-  */
-  protected function getLine()
-  {
-    if (isset($this->content[$this->line_nb])) {
-      return ($this->content[$this->line_nb]);
-    }
-    return (Parser::EOF);
-  }
-
 
 }
 ?>

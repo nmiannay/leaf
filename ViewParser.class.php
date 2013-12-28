@@ -5,15 +5,14 @@ class ViewParser extends Parser
 
   private $View;
 
-  protected function __construct($content, $View = null)
+  public function __construct($content)
   {
     parent::__construct($content);
-    $this->View = ($View) ?: new View();
+    $this->View = new View();
   }
   protected function addToStack($Node, $depth)
   {
-    while ($this->stack_length > $depth / ViewParser::TAB_INDENT)
-    {
+    while ($this->stack_length > $depth / ViewParser::TAB_INDENT) {
       $this->stack_length--;
     }
     if ($depth == 0) {
@@ -27,12 +26,15 @@ class ViewParser extends Parser
 
   public static function parseFile($filename)
   {
-    $_instance = new ViewParser(parent::fileParser($filename));
-    $line      = trim($_instance->getLine());
-    $Node      = null;
-    while ($line !== Parser::EOF)
+    $_instance   = new ViewParser($filename);
+    $prev_indent = 0;
+
+    foreach ($_instance as $line)
     {
       $indent = $_instance->trim(' ');
+
+      if ($prev_indent == $indent)
+        var_dump("malformed idnetation")
       switch ($_instance->lookAhead()) {
         case PHP_EOL:
         break;
@@ -55,13 +57,15 @@ class ViewParser extends Parser
           $_instance->lookAhead() != ' ' ?: $_instance->eat();
           $Node = $_instance->parseCode();
         break;
+        case '<':
+          $_instance->eat('<');
+          $Node = $_instance->parsePureHTML();
+        break;
         default:
           $Node = $_instance->parseTag();
         break;
       }
-      $Node->depth = $indent;
       $_instance->addToStack($Node, $indent);
-      $line = $_instance->getNextLine();
     }
     return($_instance->View);
   }
@@ -79,8 +83,7 @@ class ViewParser extends Parser
       }
     }
     $this->trim(' ');
-    while (($_c = $this->eat()) !== PHP_EOL)
-    {
+    while (($_c = $this->eat()) !== PHP_EOL) {
       if ($_c == '=') {
         if (($_val = $this->parseAttrValue()) != '') {
           $attributes[$text][] = $_val;
@@ -93,7 +96,7 @@ class ViewParser extends Parser
       }
     }
     foreach ($attributes as $key => $value) {
-      (empty($value)) ? : $Node->setAttribute($key, implode(' ', $value));
+      empty($value) ?: $Node->setAttribute($key, implode(' ', $value));
     }
     ($text == '') ?: $Node->appendChild(new \DOMText($text));
     return ($Node);
@@ -117,13 +120,31 @@ class ViewParser extends Parser
   {
     return (new CodeNode('php', $this->eatUntil(PHP_EOL)));
   }
+  private  function parsePureHTML()
+  {
+    $Node       = $this->View->createElement($this->eatUntil(' >'));
+    $attributes = array();
+
+    $this->trim(' ');
+    while (($_attr = $this->eatUntil('='.PHP_EOL)) !== '') {
+      if (($_val = $this->parseAttrValue()) != '') {
+        $attributes[$_attr][] = $_val;
+      }
+      $this->trim(' ');
+    }
+    foreach ($attributes as $key => $value) {
+      empty($value) ?: $Node->setAttribute($key, implode(' ', $value));
+    }
+    return ($Node);
+  }
+
   private  function parseTemplating()
   {
-    $type      = $this->eatUntil(':'.PHP_EOL);
-    $value     = trim($this->eatUntil(PHP_EOL));
+    $type    = $this->eatUntil(':'.PHP_EOL);
+    $value   = trim($this->eatUntil(PHP_EOL));
     $TplNode = $this->View->createElementNS('http://xyz', 'tpl:'.$type);
-    $TplNode->setAttribute('value', trim($value, '"'));
 
+    $TplNode->setAttribute('value', trim($value, '"'));
     return ($TplNode);
   }
 }
