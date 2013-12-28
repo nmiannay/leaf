@@ -32,9 +32,9 @@ class ViewParser extends Parser
     foreach ($_instance as $line)
     {
       $indent = $_instance->trim(' ');
-
-      if ($prev_indent == $indent)
-        var_dump("malformed idnetation")
+      if ($indent % ViewParser::TAB_INDENT != 0 || ($prev_indent - $indent <= 0 && $indent + ViewParser::TAB_INDENT == $prev_indent)) {
+        throw new \Exception(sprintf("Malformed indetation on line %d", $_instance->key() + 1), 1);
+      }
       switch ($_instance->lookAhead()) {
         case PHP_EOL:
         break;

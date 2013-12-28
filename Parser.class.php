@@ -120,11 +120,26 @@ abstract class Parser extends \SplFileObject
   {
     return (isset($this->line[$this->charno - $n]) ? $this->line[$this->charno - $n] : false);
   }
+
   public function next()
   {
     $this->charno = 0;
-    parent::next();
-    $this->line = parent::current();
+    do
+    {
+      parent::next();
+      $this->line = parent::current();
+    } while($this->line == '');
+  }
+
+  public function rewind()
+  {
+    parent::rewind();
+    $this->charno = 0;
+    do
+    {
+      parent::next();
+      $this->line = parent::current();
+    } while($this->line == '');
   }
 
 }
