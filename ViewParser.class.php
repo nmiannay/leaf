@@ -17,7 +17,7 @@ class ViewParser extends Parser
       $this->stack_length--;
     }
     if ($depth == 0) {
-        $this->View->appendChild($Node);
+        $this->View->getDom()->appendChild($Node);
     }
     else {
       $this->stack[$this->stack_length - 1]->appendChild($Node);
@@ -73,7 +73,7 @@ class ViewParser extends Parser
 
   private  function parseTag()
   {
-    $Node       = $this->View->createElement($this->eatUntil('.# '.PHP_EOL) ?: 'div');
+    $Node       = $this->View->getDom()->createElement($this->eatUntil('.# '.PHP_EOL) ?: 'div');
     $attributes = array();
     $text       = '';
 
@@ -124,7 +124,7 @@ class ViewParser extends Parser
   private  function parsePureHTML()
   {
     $type = $this->eatUntil(' >');
-    $Node       = $this->View->createElement($type);
+    $Node       = $this->View->getDom()->createElement($type);
     $attributes = array();
 
     $this->trim(' ');
@@ -144,9 +144,9 @@ class ViewParser extends Parser
   {
     $type    = $this->eatUntil(':'.PHP_EOL);
     $value   = trim($this->eatUntil(PHP_EOL));
-    $TplNode = $this->View->createElementNS('http://xyz', 'tpl:'.$type);
+    $TplNode = $this->View->getDom()->createElementNS('http://xyz', 'tpl:'.$type);
 
-    $TplNode->setAttribute('value', trim($value, '"'));
+    $TplNode->setAttribute('value', trim($value, '"\''));
     return ($TplNode);
   }
 }

@@ -2,50 +2,54 @@
 /**
 * @class View
 */
-class View extends \DOMDocument
+class View extends \DOMImplementation
 {
   private $cachefile;
   private $vars;
+  private $Dom;
 
-  protected static $cache_dir = '_Cache';
+  protected static $cache_dir = './_Cache/';
 
   private static $moustache_regexp;
-
+  const TPL_NS = 'http://xyz';
   /**
   * @param $path string Path to the template.
   * @param $vars array Variables that will be passed to the view.
   */
   public function __construct(array $vars = array())
   {
-    parent::__construct('5', 'UTF-8');
-    $this->preserveWhiteSpace = false;
-    $this->formatOutput       = true;
-    $this->vars               = $vars;
-    $this->cachefile          = self::$cache_dir.str_replace('\\', '_', '_Cachepart1.php');
-    // $this->cachefile          = self::$cache_dir.str_replace('\\', '_', $this->path);
+    $this->Dom                     = $this->createDocument(null, null, DOMImplementation::createDocumentType("html"));
+    $this->Dom->preserveWhiteSpace = false;
+    $this->Dom->formatOutput       = true;
+    $this->vars                    = $vars;
+  }
+
+  public function getDom()
+  {
+    return ($this->Dom);
   }
 
   public static function fromFile($filename, array $vars = array())
   {
-    for ($i = 0, $parentPath = null; $i < 2; $i++)
+    $View = null;
+    for ($i = 0; $i < 2; $i++)
     {
-      if ($parentPath !== null) {
-        $realpath  = self::parsePath($parentPath);
-        $View = ViewParser::parseFile($parentPath)->mergeWith($View);
+      if ($View !== null && $extended_file !== null) {
+        $View = ViewParser::parseFile($extended_file)->mergeWith($View->getDom());
       }
       else {
-        $realpath  = self::parsePath($filename);
-        $View = ViewParser::parseFile($realpath);
+        $View = ViewParser::parseFile($filename);
       }
 
-      if (($ExtendsNode = $View->getElementsByTagName('extends')->item(0)) !== null) {
-        $View->removeChild($ExtendsNode);
-        $parentPath = $ExtendsNode->getAttribute("value");
+      if (($ExtendsNode = $View->getDom()->getElementsByTagName('extends')->item(0)) !== null) {
+        $View->getDom()->removeChild($ExtendsNode);
+        $extended_file = $ExtendsNode->getAttribute("value");
       }
       else {
         break;
       }
     }
+    $View->cachefile = basename($filename);
     return ($View);
   }
 
@@ -56,9 +60,9 @@ class View extends \DOMDocument
   * @brief Merges two views tree for the inheritance.
   * @param $child array The child view's tree.
   */
-  private function mergeWith(View $Child)
+  private function mergeWith(\DomDocument $Child)
   {
-    $ParentBlocks = $this->getElementsByTagName('block');
+    $ParentBlocks = $this->Dom->getElementsByTagName('block');
 
     foreach ($Child->getElementsByTagName('block') as $ChildBlock) {
       $blockId = $ChildBlock->getAttribute("value");
@@ -67,11 +71,12 @@ class View extends \DOMDocument
         $ParentBlock = $ParentBlocks->item($i);
 
         if ($ParentBlock->getAttribute("value") == $blockId) {
-          $import = $this->importNode($ChildBlock, true);
+          $import = $this->Dom->importNode($ChildBlock, true);
           $OldParent = $ParentBlock->parentNode->replaceChild($import, $ParentBlock);
 
           if (($tplParent = $import->getElementsByTagName('parent')->item(0)) !== null) {
-            $this->replaceWithChildren($OldParent, $tplParent);
+            $tplParent->parentNode->replaceChild($OldParent, $tplParent);
+            $this->unwrap($OldParent);
           }
         }
       }
@@ -79,15 +84,11 @@ class View extends \DOMDocument
     return ($this);
   }
 
-  private function replaceWithChildren(\DOMNode $NewNode, \DOMNode $OldNode)
-  {
-    $Frag = $this->createDocumentFragment();
-
-    foreach ($NewNode->childNodes as $ChildNode) {
-      $Frag->appendChild($ChildNode);
+  public function unwrap(\DOMNode $OldNode) {
+    while($OldNode->hasChildNodes()) {
+      $OldNode->parentNode->insertBefore($OldNode->firstChild, $OldNode);
     }
-    $OldNode->parentNode->replaceChild($Frag, $OldNode);
-    return ($OldNode);
+    return ($OldNode->parentNode->removeChild($OldNode));
   }
 
   /**
@@ -96,48 +97,25 @@ class View extends \DOMDocument
   */
   public function render(array $vars = array())
   {
-    if (Application::in_devMode() || !file_exists($this->cachefile)) {
-      // file_put_contents($this->cachefile, $this->saveHTML());
-      file_put_contents($this->cachefile, $this->saveXML());
+    if (Application::in_devMode() || !file_exists(self::$cache_dir.$this->cachefile)) {
+      foreach ($this->Dom->getElementsByTagNameNS(View::TPL_NS, '*') as $TplNode) {
+        $this->unwrap($TplNode);
+      }
+      if (!file_exists('_Cache')) {
+        mkdir(self::$cache_dir);
+      }
+      file_put_contents(self::$cache_dir.$this->cachefile, $this->Dom->saveXML());
     }
     $this->vars += $vars;
     $render_sandbox = function(){
       ob_start();
         extract($this->vars);
-          require $this->cachefile;
+          require self::$cache_dir.$this->cachefile;
       return (ob_get_clean());
     };
 
     $render_sandbox->bindTo($this);
     return ($render_sandbox());
-  }
-
-  /**
-  * @brief Parse the path to get the real absolute path to the template file
-  * @param $toParse string Path to the view.
-  * @param $sub_dir string The subdirectory's path of the View's file.
-  */
-  static public function parsePath($toParse, $sub_dir = 'Modules/%s/Ressources/Views/%s')
-  {
-    $file_name   = substr(strstr($toParse, '@'), 1);
-    $module_path = strstr($toParse, '@', true);
-    $full_name   = ($module_path == '') ? sprintf(substr(strstr($sub_dir, '%s'), 2), $file_name) : sprintf($sub_dir, $module_path, $file_name);
-
-    switch (true)
-    {
-      case ($realpath = realpath(Application::getAppDir().$toParse)) === false:
-        throw new \Exception("View `$full_name' doesn't exist", 1);
-        break;
-      case is_dir($realpath):
-        throw new \Exception("Can't open `$full_name' because it's a directory, it must be a file", 1);
-        break;
-      case !is_readable($realpath):
-        throw new \Exception("Can't open `$full_name'", 1);
-        break;
-      default:
-        return ($realpath);
-        break;
-    }
   }
 }
 ?>

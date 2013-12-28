@@ -10,9 +10,9 @@ class BlockNode extends \DOMDocumentFragment
 
   public function createMarker($type, $value)
   {
-    $this->Marker = new \DOMElement('tpl:'.$type, null, 'http://xyz');
+    $this->Marker = new \DOMElement('tpl:'.$type, null, View::TPL_NS);
     $this->appendChild($this->Marker);
-    $this->Marker->setAttribute('value', trim($value, '"'));
+    $this->Marker->setAttribute('value', trim($value, "\"'"));
     $this->type   = $type;
     $this->value  = $value;
   }
