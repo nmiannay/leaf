@@ -128,19 +128,16 @@ abstract class Parser extends \SplFileObject
     {
       parent::next();
       $this->line = parent::current();
-    } while($this->line == '');
+    } while($this->line == '' && !parent::eof());
   }
 
   public function rewind()
   {
     parent::rewind();
     $this->charno = 0;
-    do
-    {
-      parent::next();
-      $this->line = parent::current();
-    } while($this->line == '');
+    $this->line = parent::current();
+    if ($this->line == '')
+      $this->next();
   }
-
 }
 ?>

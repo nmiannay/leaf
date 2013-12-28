@@ -12,6 +12,7 @@ class ViewParser extends Parser
   }
   protected function addToStack($Node, $depth)
   {
+    // var_dump([$depth, isset( $Node->tagName) ? $Node->tagName : $Node->wholeText ]);
     while ($this->stack_length > $depth / ViewParser::TAB_INDENT) {
       $this->stack_length--;
     }
@@ -27,45 +28,45 @@ class ViewParser extends Parser
   public static function parseFile($filename)
   {
     $_instance   = new ViewParser($filename);
-    $prev_indent = 0;
+    $indent = $prev_indent = 0;
+    $tagstack = array();
 
-    foreach ($_instance as $line)
+    for ($_instance->rewind(); $_instance->current() !== false; $_instance->next())
     {
+      $prev_indent = $indent;
       $indent = $_instance->trim(' ');
       if ($indent % ViewParser::TAB_INDENT != 0 || ($prev_indent - $indent <= 0 && $indent + ViewParser::TAB_INDENT == $prev_indent)) {
         throw new \Exception(sprintf("Malformed indetation on line %d", $_instance->key() + 1), 1);
       }
       switch ($_instance->lookAhead()) {
-        case PHP_EOL:
-        break;
         case '|':
           $_instance->eat('|');
           $_instance->lookAhead() != ' ' ?: $_instance->eat();
-          $Node = $_instance->parseText();
+          $_instance->addToStack($_instance->parseText(), $indent);
         break;
         case '=':
           $_instance->eat('=');
           $_instance->lookAhead() != ' ' ?: $_instance->eat();
-          $Node = $_instance->parseEcho();
+          $_instance->addToStack($_instance->parseEcho(), $indent);
         break;
         case '@':
           $_instance->eat('@');
-          $Node = $_instance->parseTemplating();
+          $_instance->addToStack($_instance->parseTemplating(), $indent);
         break;
         case '-':
           $_instance->eat('-');
           $_instance->lookAhead() != ' ' ?: $_instance->eat();
-          $Node = $_instance->parseCode();
+          $_instance->addToStack($_instance->parseCode(), $indent);
         break;
         case '<':
           $_instance->eat('<');
-          $Node = $_instance->parsePureHTML();
+          if ($_instance->lookAhead() != '/')
+            $_instance->addToStack($_instance->parsePureHTML(), $indent);
         break;
         default:
-          $Node = $_instance->parseTag();
+          $_instance->addToStack($_instance->parseTag(), $indent);
         break;
       }
-      $_instance->addToStack($Node, $indent);
     }
     return($_instance->View);
   }
@@ -122,7 +123,8 @@ class ViewParser extends Parser
   }
   private  function parsePureHTML()
   {
-    $Node       = $this->View->createElement($this->eatUntil(' >'));
+    $type = $this->eatUntil(' >');
+    $Node       = $this->View->createElement($type);
     $attributes = array();
 
     $this->trim(' ');
