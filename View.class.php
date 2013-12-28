@@ -97,7 +97,7 @@ class View extends \DOMImplementation
   */
   public function render(array $vars = array())
   {
-    if (Application::in_devMode() || !file_exists(self::$cache_dir.$this->cachefile)) {
+    if (!file_exists(self::$cache_dir.$this->cachefile)) {
       foreach ($this->Dom->getElementsByTagNameNS(View::TPL_NS, '*') as $TplNode) {
         $this->unwrap($TplNode);
       }
