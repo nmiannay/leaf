@@ -11,7 +11,7 @@ class CodeNode extends \DOMProcessingInstruction
   public function __construct($name, $value = null)
   {
     parent::__construct($name, $value);
-    $this->needend = preg_match('/(if|foreach|for)\s*(?:\((.*)\)|(.*))$/', $value, $this->matches) >= 1;
+    $this->needend = preg_match('/(if|foreach|for|while)\s*(?:\((.*)\)|(.*))$/', $value, $this->matches) >= 1;
   }
 
   public function appendChild(\DOMNode $newChild)
