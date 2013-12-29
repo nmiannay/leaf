@@ -95,9 +95,9 @@ class View extends \DOMImplementation
   * @brief Render the template view.
   * @param $vars array Variables that will be passed to the view.
   */
-  public function render(array $vars = array())
+  public function render(array $vars = array(), $rerender = false)
   {
-    if (!file_exists(self::$cache_dir.$this->cachefile)) {
+    if ($rerender || !file_exists(self::$cache_dir.$this->cachefile)) {
       foreach ($this->Dom->getElementsByTagNameNS(View::TPL_NS, '*') as $TplNode) {
         $this->unwrap($TplNode);
       }
