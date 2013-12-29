@@ -7,8 +7,10 @@ class DoctypeStrategy extends TagStrategy
   {
     $DOMImplementation = new \DOMImplementation();
 
+    if ($Tag->ownerDocument->doctype !== null) {
+      $Tag->ownerDocument->removeChild($Tag->ownerDocument->doctype);
+    }
     $Tag->ownerDocument->appendChild($DOMImplementation->createDocumentType($Tag->nodeValue));
-    $Tag->ownerDocument->removeChild($Tag->ownerDocument->doctype);
     $Tag->ownerDocument->removeChild($Tag);
   }
 }

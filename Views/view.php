@@ -24,7 +24,6 @@ html
         p
           | No items found.  Please add some inventory.
           | Thank you!
-
     div id="footer"
-      render 'footer'
+      @render: 'Views/footer.php'
       | Copyright © #{year} #{author}t

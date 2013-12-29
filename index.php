@@ -16,10 +16,10 @@ for ($i = 0; $i < 1; $i++) {
   var_dump($View->render(array(), true));
 }
 
-// $dom = new DomDocument();
+$dom = new DomDocument();
 
-// $dom->loadHTMLFile ('_Cache/part1.php');
+$dom->loadHTMLFile ('_Cache/part1.php');
 
-// var_dump($dom->saveHTML());
+var_dump($dom->saveHTML());
 echo '<br/>'.number_format(microtime(true) - $startTime, 4), 's';
 ?>

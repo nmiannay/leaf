@@ -9,6 +9,7 @@ class ViewParser extends Parser
   {
     parent::__construct($content);
     $this->View = new View();
+    $this->prev_indent = 0;
   }
   protected function addToStack($Node, $depth)
   {
@@ -35,16 +36,16 @@ class ViewParser extends Parser
   }
 
   private function parseLine(){
-    static $indent = 0;
 
-    $prev_indent = $indent;
     $Node        = null;
     $indent      = $this->trim(' ');
 
-    if ($indent % ViewParser::TAB_INDENT != 0 || ($prev_indent - $indent <= 0 && $indent + ViewParser::TAB_INDENT == $prev_indent)) {
+    if ($indent % ViewParser::TAB_INDENT != 0 || ($this->prev_indent - $indent <= 0 && $indent + ViewParser::TAB_INDENT == $this->prev_indent)) {
       throw new \Exception(sprintf("Malformed indetation on line %d", $this->key() + 1), 1);
     }
     switch ($this->lookAhead()) {
+      case '/':
+      break;
       case '|':
         $this->eat('|');
         $this->lookAhead() != ' ' ?: $this->eat();
@@ -85,6 +86,7 @@ class ViewParser extends Parser
         $Node->apply();
       }
     }
+    $this->prev_indent = $indent;
     return ($Node);
   }
 
@@ -170,11 +172,24 @@ class ViewParser extends Parser
 
   private  function parseTemplating()
   {
-    $type    = $this->eatUntil(':'.PHP_EOL);
-    $value   = trim($this->eatUntil(PHP_EOL));
-    $TplNode = $this->View->getDom()->createElementNS('http://xyz', 'tpl:'.$type);
+    $type  = $this->eatUntil(':'.PHP_EOL);
+    $value = trim($this->eatUntil(PHP_EOL), "\' ");
+    $Dom   = $this->View->getDom();
 
-    $TplNode->setAttribute('value', trim($value, '"\''));
+    if ($type == 'render') {
+      $View       = View::fromFile($value);
+      $IncludeDom = $View->getDom();
+      $TplNode    = $Dom->createDocumentFragment();
+
+      for ($Child = $IncludeDom->firstChild; $Child !== null; $Child = $Child->nextSibling) {
+        $TplNode->appendChild($Dom->importNode($Child, true));
+      }
+    }
+    else {
+      $TplNode = $this->View->getDom()->createElementNS('http://xyz', 'tpl:'.$type);
+      $TplNode->setAttribute('value', $value);
+    }
+
     return ($TplNode);
   }
 }

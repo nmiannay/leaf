@@ -20,7 +20,7 @@ class View extends \DOMImplementation
   */
   public function __construct(array $vars = array())
   {
-    $this->Dom                     = $this->createDocument(null, null, \DOMImplementation::createDocumentType("html"));
+    $this->Dom                     = $this->createDocument(null, null);
     $this->Dom->preserveWhiteSpace = false;
     $this->Dom->formatOutput       = true;
     $this->vars                    = $vars;

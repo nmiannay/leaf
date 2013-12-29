@@ -1,6 +1,6 @@
 @extends: 'Views/view.php'
 
-@block:testblock
+@block: testblock
   div.test.#teplop class="tet" id="te"
     | it works
   <div class="test">
