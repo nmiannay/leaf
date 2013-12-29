@@ -11,7 +11,13 @@ class CodeNode extends \DOMProcessingInstruction
   public function __construct($name, $value = null)
   {
     parent::__construct($name, $value);
-    $this->needend = preg_match('/(if|foreach|for|while)\s*(?:\((.*)\)|(.*))$/', $value, $this->matches) >= 1;
+
+    if ($value == 'else') {
+      $this->data .= ': ';
+    }
+    else {
+      $this->needend = preg_match('/(if|foreach|for|while)\s*(?:\((.*)\)|(.*))$/', $value, $this->matches) >= 1;
+    }
   }
 
   public function appendChild(\DOMNode $newChild)
@@ -29,6 +35,5 @@ class CodeNode extends \DOMProcessingInstruction
       $this->needend = false;
     }
     $this->parentNode->insertBefore($newChild, $this->closingTag);
-    parent::appendChild($newChild);
   }
 }
