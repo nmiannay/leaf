@@ -8,5 +8,3 @@
       @parent
     </div>
   </div>
-  p
-    | plop

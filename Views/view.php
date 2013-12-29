@@ -18,10 +18,9 @@ html
         table
           - foreach $items as $item
             tr
-              td.name
-                = $item
-              td.price
-                = $item
+              td.name = $item
+              td.price = $item
+        @block:testblock
       - else
         p
           | No items found.  Please add some inventory.

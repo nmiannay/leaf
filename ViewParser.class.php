@@ -100,11 +100,16 @@ class ViewParser extends Parser
     $this->trim(' ');
     while (($_c = $this->eat()) !== PHP_EOL) {
       if ($_c == '=') {
-        if (($_val = $this->parseAttrValue()) != '') {
-          $attributes[$text][] = $_val;
+        if ($text == '') {
+          $Node->appendChild($this->parseEcho());
         }
-        $text = '';
-        $this->trim(' ');
+        else {
+          if (($_val = $this->parseAttrValue()) != '') {
+            $attributes[$text][] = $_val;
+          }
+          $text = '';
+          $this->trim(' ');
+        }
       }
       else {
         $text .= $_c;
@@ -134,7 +139,8 @@ class ViewParser extends Parser
 
   private  function parseEcho()
   {
-    return (new \DOMProcessingInstruction ('php', 'echo '.$this->eatUntil(PHP_EOL).'; '));
+    $text = $this->eatUntil(PHP_EOL);
+    return (new \DOMProcessingInstruction ('php', 'echo '.$text.'; '));
   }
   private  function parseCode()
   {
