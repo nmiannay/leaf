@@ -4,8 +4,7 @@ html
     title Slim Examples
     meta name="keywords" content="template language"
     meta name="author" content="author"
-    javascript:
-      | alert('Slim supports embedded javascript!')
+    script src="script.js"
 
   body
     h1 Markup examples

@@ -81,6 +81,9 @@ class ViewParser extends Parser
     }
     if ($Node !== null) {
       $this->addToStack($Node, $indent);
+      if (method_exists($Node, 'apply')) {
+        $Node->apply();
+      }
     }
     return ($Node);
   }

@@ -2,6 +2,8 @@
 /**
 * @class View
 */
+use Tags\Tag;
+use Tags\Strategies;
 class View extends \DOMImplementation
 {
   private $cachefile;
@@ -18,10 +20,14 @@ class View extends \DOMImplementation
   */
   public function __construct(array $vars = array())
   {
-    $this->Dom                     = $this->createDocument(null, null, DOMImplementation::createDocumentType("html"));
+    $this->Dom                     = $this->createDocument(null, null, \DOMImplementation::createDocumentType("html"));
     $this->Dom->preserveWhiteSpace = false;
     $this->Dom->formatOutput       = true;
     $this->vars                    = $vars;
+
+    $this->Dom->registerNodeClass('DOMElement', 'Tags\\Tag');
+    Tag::registerStrategy('doctype', new Strategies\DoctypeStrategy());
+    Tag::registerStrategy('script', new Strategies\ScriptStrategy());
   }
 
   public function getDom()

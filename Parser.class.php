@@ -62,9 +62,9 @@ abstract class Parser extends \SplFileObject
   protected function eatUntil($until, $accept = null)
   {
     $str = '';
-    $c = $this->eat($accept);
-    while ($c !== PHP_EOL && !strpbrk($c, $until))
-    {
+    $c   = $this->eat($accept);
+
+    while ($c !== PHP_EOL && !strpbrk($c, $until)) {
       $str .= $c;
       $c = $this->eat($accept);
     }
@@ -81,8 +81,7 @@ abstract class Parser extends \SplFileObject
     $str = '';
     $_c  = $this->lookAhead();
 
-    while ($_c !== PHP_EOL && strpbrk($_c, $while) !== false)
-    {
+    while ($_c !== PHP_EOL && strpbrk($_c, $while) !== false) {
       $str .= $this->eat();
       $_c = $this->lookAhead();
     }
@@ -97,8 +96,7 @@ abstract class Parser extends \SplFileObject
     $counter = 0;
     $_c      = $this->lookAhead();
 
-    while ($_c !== PHP_EOL && strpbrk($_c, $trim) !== false)
-    {
+    while ($_c !== PHP_EOL && strpbrk($_c, $trim) !== false) {
       $this->eat();
       $_c = $this->lookAhead();
       $counter++;
@@ -136,8 +134,9 @@ abstract class Parser extends \SplFileObject
     parent::rewind();
     $this->charno = 0;
     $this->line = parent::current();
-    if ($this->line == '')
+    if ($this->line == '') {
       $this->next();
+    }
   }
 }
 ?>
