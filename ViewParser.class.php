@@ -4,13 +4,15 @@ class ViewParser extends Parser
   const TAB_INDENT = 2;
 
   private $View;
+  private $prev_indent;
 
   public function __construct($content)
   {
     parent::__construct($content);
-    $this->View = new View();
+    $this->View        = new View();
     $this->prev_indent = 0;
   }
+
   protected function addToStack($Node, $depth)
   {
     while ($this->stack_length > $depth / ViewParser::TAB_INDENT) {
@@ -32,6 +34,7 @@ class ViewParser extends Parser
     for ($_instance->rewind(); $_instance->current() !== false; $_instance->next()) {
       $_instance->parseLine();
     }
+
     return($_instance->View);
   }
 
@@ -82,23 +85,21 @@ class ViewParser extends Parser
     }
     if ($Node !== null) {
       $this->addToStack($Node, $indent);
-      if (method_exists($Node, 'apply')) {
-        $Node->apply();
-      }
     }
     $this->prev_indent = $indent;
+
     return ($Node);
   }
 
   private  function parseTag()
   {
-    $Node       = $this->View->getDom()->createElement($this->eatUntil('.# '.PHP_EOL) ?: 'div');
+    $tagName    = $this->eatUntil('.# ' . PHP_EOL) ?: 'div';
     $attributes = array();
     $text       = '';
 
     for ($_lb = $this->lookBehind(); $_lb == '.' || $_lb == '#'; $_lb = $this->lookBehind())
     {
-      if (($_val = $this->eatUntil('.# '.PHP_EOL)) != '') {
+      if (($_val = $this->eatUntil('.# ' . PHP_EOL)) != '') {
         $attributes[($_lb == '.') ? 'class' : 'id'][] = $_val;
       }
     }
@@ -106,12 +107,13 @@ class ViewParser extends Parser
     while (($_c = $this->eat()) !== PHP_EOL) {
       if ($_c == '=') {
         if ($text == '') {
+          $Node = $this->View->getTagsManager()->buildNode($tagName, $text, $attributes);
           $Node->appendChild($this->parseEcho());
+
+          return ($Node);
         }
         else {
-          if (($_val = $this->parseAttrValue()) != '') {
-            $attributes[$text][] = $_val;
-          }
+          $attributes[$text][] = $this->parseAttrValue();
           $text = '';
           $this->trim(' ');
         }
@@ -120,20 +122,18 @@ class ViewParser extends Parser
         $text .= $_c;
       }
     }
-    foreach ($attributes as $key => $value) {
-      empty($value) ?: $Node->setAttribute($key, implode(' ', $value));
-    }
-    ($text == '') ?: $Node->appendChild(new \DOMText($text));
-    return ($Node);
+
+    return ($this->View->getTagsManager()->buildNode($tagName, $text, $attributes));
   }
 
   private function parseAttrValue()
   {
     $openChar = $this->lookAhead();
     if ($openChar != '"' && $openChar != "'") {
-      return ('php echo '.$this->eatUntil(' '.PHP_EOL).'; ');
+      return ('php echo '.$this->eatUntil(' ' . PHP_EOL).'; ');
     }
     $this->eat();
+
     return ($this->eatUntil($openChar));
   }
 
@@ -145,7 +145,8 @@ class ViewParser extends Parser
   private  function parseEcho()
   {
     $text = $this->eatUntil(PHP_EOL);
-    return (new \DOMProcessingInstruction ('php', 'echo '.$text.'; '));
+
+    return (new \DOMProcessingInstruction ('php', 'echo ' . $text . '; '));
   }
   private  function parseCode()
   {
@@ -153,43 +154,24 @@ class ViewParser extends Parser
   }
   private  function parsePureHTML()
   {
-    $type       = $this->eatUntil(' >');
-    $Node       = $this->View->getDom()->createElement($type);
+    $tagName    = $this->eatUntil(' >');
     $attributes = array();
 
     $this->trim(' ');
     while (($_attr = $this->eatUntil('=>'.PHP_EOL)) !== '') {
-      if (($_val = $this->parseAttrValue()) != '') {
-        $attributes[$_attr][] = $_val;
-      }
+      $attributes[$_attr][] = $this->parseAttrValue();
       $this->trim(' ');
     }
-    foreach ($attributes as $key => $value) {
-      empty($value) ?: $Node->setAttribute($key, implode(' ', $value));
-    }
-    return ($Node);
+    $text = $this->eatUntil(PHP_EOL);
+
+    return ($this->View->getTagsManager()->buildNode($tagName, $text, $attributes));
   }
 
   private  function parseTemplating()
   {
-    $type  = $this->eatUntil(':'.PHP_EOL);
-    $value = trim($this->eatUntil(PHP_EOL), "\' ");
-    $Dom   = $this->View->getDom();
+    $blockName = $this->eatUntil(':' . PHP_EOL);
+    $value     = trim($this->eatUntil(PHP_EOL), "\' ");
 
-    if ($type == 'render') {
-      $View       = View::fromFile($value);
-      $IncludeDom = $View->getDom();
-      $TplNode    = $Dom->createDocumentFragment();
-
-      for ($Child = $IncludeDom->firstChild; $Child !== null; $Child = $Child->nextSibling) {
-        $TplNode->appendChild($Dom->importNode($Child, true));
-      }
-    }
-    else {
-      $TplNode = $this->View->getDom()->createElementNS('http://xyz', 'tpl:'.$type);
-      $TplNode->setAttribute('value', $value);
-    }
-
-    return ($TplNode);
+    return ($this->View->getTagsManager()->buildTemplate($blockName, $value));
   }
 }

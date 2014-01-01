@@ -2,13 +2,15 @@
 /**
 * @class View
 */
-use Tags\Tag;
-use Tags\Strategies;
+use Tags\TagsManager;
+use Tags\TagStrategies;
+use Tags\TemplateStrategies;
 class View extends \DOMImplementation
 {
   private $cachefile;
   private $vars;
   private $Dom;
+  private $TagsManager;
 
   protected static $cache_dir = './_Cache/';
 
@@ -24,15 +26,20 @@ class View extends \DOMImplementation
     $this->Dom->preserveWhiteSpace = false;
     $this->Dom->formatOutput       = true;
     $this->vars                    = $vars;
+    $this->TagsManager             = new TagsManager($this->Dom);
 
-    $this->Dom->registerNodeClass('DOMElement', 'Tags\\Tag');
-    Tag::registerStrategy('doctype', new Strategies\DoctypeStrategy());
-    Tag::registerStrategy('script', new Strategies\ScriptStrategy());
+    $this->TagsManager->registerStrategy('doctype', new TagStrategies\DoctypeStrategy());
+    $this->TagsManager->registerStrategy('script', new TagStrategies\ScriptStrategy());
+    $this->TagsManager->registerTempalateStrategy('render', new TemplateStrategies\RenderStrategy());
   }
 
   public function getDom()
   {
     return ($this->Dom);
+  }
+  public function getTagsManager()
+  {
+    return ($this->TagsManager);
   }
 
   public static function fromFile($filename, array $vars = array())
