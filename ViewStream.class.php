@@ -35,9 +35,7 @@ class ViewStream extends \DOMImplementation
 
   public function getDom() { return ($this->Dom); }
   public function getFilename() { return ($this->opened_path ?: $this->url['host'].$this->url['path']); }
-  public function getCachename() {
-   return (self::CACHEDIR.str_replace('/', self::DIR_SEPARATOR, $this->getFilename()));
-  }
+  public function getCachename() { return (self::CACHEDIR.str_replace('/', self::DIR_SEPARATOR, $this->getFilename())); }
   public function getTagsManager() { return ($this->TagsManager); }
 
   private function mergeWith(\DomDocument $Child)
@@ -61,13 +59,15 @@ class ViewStream extends \DOMImplementation
         }
       }
     }
+
     return ($this->Dom);
   }
 
   public function unwrap(\DOMNode $OldNode) {
-    while($OldNode->hasChildNodes()) {
+    while ($OldNode->hasChildNodes()) {
       $OldNode->parentNode->insertBefore($OldNode->firstChild, $OldNode);
     }
+
     return ($OldNode->parentNode->removeChild($OldNode));
   }
 
@@ -79,41 +79,50 @@ class ViewStream extends \DOMImplementation
     $this->options     = $options;
     $extended_file     = null;
 
-    if (!file_exists($this->getCachename())) {
-      for ($i = 0; $i < 2; $i++)
-      {
-        if ($this->Dom !== null && $extended_file !== null) {
-          $ChildView = new ViewStream();
-          $ChildView->stream_open(sprintf('%s://%s', $this->url['host'], $extended_file), $mode, $options, $opened_path);
-          $this->Dom = $ChildView->mergeWith($this->Dom);
+    try {
+      if ($this->need_to_rebuild()) {
+        for ($i = 0; $i < 2; $i++)
+        {
+          if ($this->Dom !== null && $extended_file !== null) {
+            $ChildView = new ViewStream();
+            $ChildView->stream_open(sprintf('%s://%s', $this->url['host'], $extended_file), $mode, $options, $opened_path);
+            $this->Dom = $ChildView->mergeWith($this->Dom);
+          }
+          else {
+            $Parser = new ViewParser($this);
+          }
+          if (($ExtendsNode = $this->Dom->getElementsByTagName('extends')->item(0)) === null) {
+            break;
+          }
+          $this->Dom->removeChild($ExtendsNode);
+          $extended_file = $ExtendsNode->getAttribute("value");
         }
-        else {
-          $Parser = new ViewParser($this);
-        }
-        if (($ExtendsNode = $this->Dom->getElementsByTagName('extends')->item(0)) === null) {
-          break;
-        }
-        $this->Dom->removeChild($ExtendsNode);
-        $extended_file = $ExtendsNode->getAttribute("value");
       }
+
+      return (true);
     }
-    return (true);
+    catch (\Exception $E) {
+      throw new \Exception($E->getMessage(), $E->getCode());
+      return (false);
+    }
   }
 
   public function stream_read($count)
   {
     if (!$this->eof || !$count) {
       $this->eof = true;
-      if (file_exists($this->getCachename())) {
+      if (!$this->need_to_rebuild()) {
         return (file_get_contents($this->getCachename()));
       }
       else {
         foreach ($this->Dom->getElementsByTagNameNS(ViewStream::TPL_NS, '*') as $TplNode) {
           $this->unwrap($TplNode);
         }
+
         return ($this->Dom->saveXML());
       }
     }
+
     return ('');
   }
 
@@ -132,9 +141,15 @@ class ViewStream extends \DOMImplementation
     unset($this->Dom);
   }
 
+  public function need_to_rebuild()
+  {
+    $last_time = filemtime($this->getFilename());
+    return (!file_exists($this->getCachename()) || $last_time > filemtime($this->getCachename()));
+  }
   public function stream_flush()
   {
-    if (!file_exists($this->getCachename())) {
+    if ($this->need_to_rebuild()) {
+      touch($this->getCachename(), filemtime($this->getFilename()));
       file_put_contents($this->getCachename(), $this->Dom->saveXML());
     }
   }
