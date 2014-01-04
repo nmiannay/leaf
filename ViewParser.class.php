@@ -3,14 +3,18 @@ class ViewParser extends Parser
 {
   const TAB_INDENT = 2;
 
-  private $View;
+  private $ViewStream;
   private $prev_indent;
 
-  public function __construct($content)
+  public function __construct(\ViewStream $ViewStream)
   {
-    parent::__construct($content);
-    $this->View        = new View();
+    parent::__construct($ViewStream->filename);
+    $this->ViewStream  = $ViewStream;
     $this->prev_indent = 0;
+
+    for ($this->rewind(); $this->current() !== false; $this->next()) {
+      $this->parseLine();
+    }
   }
 
   protected function addToStack($Node, $depth)
@@ -19,23 +23,12 @@ class ViewParser extends Parser
       $this->stack_length--;
     }
     if ($depth == 0) {
-        $this->View->getDom()->appendChild($Node);
+        $this->ViewStream->getDom()->appendChild($Node);
     }
     else {
       $this->stack[$this->stack_length - 1]->appendChild($Node);
     }
     $this->stack[$this->stack_length++] = $Node;
-  }
-
-  public static function parseFile($filename)
-  {
-    $_instance = new ViewParser($filename);
-
-    for ($_instance->rewind(); $_instance->current() !== false; $_instance->next()) {
-      $_instance->parseLine();
-    }
-
-    return($_instance->View);
   }
 
   private function parseLine(){
@@ -107,7 +100,7 @@ class ViewParser extends Parser
     while (($_c = $this->eat()) !== PHP_EOL) {
       if ($_c == '=') {
         if ($text == '') {
-          $Node = $this->View->getTagsManager()->buildNode($tagName, $text, $attributes);
+          $Node = $this->ViewStream->getTagsManager()->buildNode($tagName, $text, $attributes);
           $Node->appendChild($this->parseEcho());
 
           return ($Node);
@@ -123,7 +116,7 @@ class ViewParser extends Parser
       }
     }
 
-    return ($this->View->getTagsManager()->buildNode($tagName, $text, $attributes));
+    return ($this->ViewStream->getTagsManager()->buildNode($tagName, $text, $attributes));
   }
 
   private function parseAttrValue()
@@ -154,17 +147,21 @@ class ViewParser extends Parser
   }
   private  function parsePureHTML()
   {
-    $tagName    = $this->eatUntil(' >');
+    $tagName    = $this->eatUntil(' />');
     $attributes = array();
 
     $this->trim(' ');
-    while (($_attr = $this->eatUntil('=>'.PHP_EOL)) !== '') {
-      $attributes[$_attr][] = $this->parseAttrValue();
-      $this->trim(' ');
+    if ($this->lookBehind() != '>') {
+      while (($_attr = $this->eatUntil('/>='.PHP_EOL)) !== '') {
+        $attributes[$_attr][] = $this->parseAttrValue();
+        $this->trim(' ');
+      }
     }
-    $text = $this->eatUntil(PHP_EOL);
-
-    return ($this->View->getTagsManager()->buildNode($tagName, $text, $attributes));
+    if ($this->lookAhead() == '>') {
+      $this->eat();
+    }
+    $text = $this->eatUntil('<'.PHP_EOL);
+    return ($this->ViewStream->getTagsManager()->buildNode($tagName, $text, $attributes));
   }
 
   private  function parseTemplating()
@@ -172,6 +169,6 @@ class ViewParser extends Parser
     $blockName = $this->eatUntil(':' . PHP_EOL);
     $value     = trim($this->eatUntil(PHP_EOL), "\' ");
 
-    return ($this->View->getTagsManager()->buildTemplate($blockName, $value));
+    return ($this->ViewStream->getTagsManager()->buildTemplate($blockName, $value));
   }
 }
