@@ -7,19 +7,19 @@ use Tags\TagStrategies;
 use Tags\TemplateStrategies;
 class ViewStream extends \DOMImplementation
 {
-  private $cachefile;
   private $Dom;
   private $TagsManager;
-
-  public $mode;
-  public $url;
-  public $filename;
-  public $options;
-  public $_eof = false;
+  private $mode;
+  private $url;
+  private $opened_path;
+  private $options;
+  private $eof = false;
 
   private static $_isRegistered = false;
-  const TPL_NS = 'http://xyz';
-  const SCHEME = 'phs';
+  const TPL_NS        = 'http://xyz';
+  const SCHEME        = 'phs';
+  const CACHEDIR      = '_Cache/';
+  const DIR_SEPARATOR = '_';
 
   public function __construct()
   {
@@ -34,6 +34,10 @@ class ViewStream extends \DOMImplementation
   }
 
   public function getDom() { return ($this->Dom); }
+  public function getFilename() { return ($this->opened_path ?: $this->url['host'].$this->url['path']); }
+  public function getCachename() {
+   return (self::CACHEDIR.str_replace('/', self::DIR_SEPARATOR, $this->getFilename()));
+  }
   public function getTagsManager() { return ($this->TagsManager); }
 
   private function mergeWith(\DomDocument $Child)
@@ -47,7 +51,7 @@ class ViewStream extends \DOMImplementation
         $ParentBlock = $ParentBlocks->item($i);
 
         if ($ParentBlock->getAttribute("value") == $blockId) {
-          $import = $this->Dom->importNode($ChildBlock, true);
+          $import    = $this->Dom->importNode($ChildBlock, true);
           $OldParent = $ParentBlock->parentNode->replaceChild($import, $ParentBlock);
 
           if (($tplParent = $import->getElementsByTagName('parent')->item(0)) !== null) {
@@ -69,28 +73,28 @@ class ViewStream extends \DOMImplementation
 
   public function stream_open($path, $mode, $options, &$opened_path)
   {
-    $this->url      = parse_url($path);
-    $this->filename = $this->url['host'].$this->url['path'];
-    $this->mode     = $mode;
-    $this->options  = $options;
-    $extended_file  = null;
+    $this->url         = parse_url($path);
+    $this->opened_path = $opened_path;
+    $this->mode        = $mode;
+    $this->options     = $options;
+    $extended_file     = null;
 
-    for ($i = 0; $i < 2; $i++)
-    {
-      if ($this->Dom !== null && $extended_file !== null) {
-        $ChildView = new ViewStream();
-        $ChildView->stream_open(sprintf('%s://%s', $this->url['host'], $extended_file), $mode, $options, $opened_path);
-        $this->Dom = $ChildView->mergeWith($this->Dom);
-      }
-      else {
-        $Parser = new ViewParser($this);
-      }
-      if (($ExtendsNode = $this->Dom->getElementsByTagName('extends')->item(0)) !== null) {
+    if (!file_exists($this->getCachename())) {
+      for ($i = 0; $i < 2; $i++)
+      {
+        if ($this->Dom !== null && $extended_file !== null) {
+          $ChildView = new ViewStream();
+          $ChildView->stream_open(sprintf('%s://%s', $this->url['host'], $extended_file), $mode, $options, $opened_path);
+          $this->Dom = $ChildView->mergeWith($this->Dom);
+        }
+        else {
+          $Parser = new ViewParser($this);
+        }
+        if (($ExtendsNode = $this->Dom->getElementsByTagName('extends')->item(0)) === null) {
+          break;
+        }
         $this->Dom->removeChild($ExtendsNode);
         $extended_file = $ExtendsNode->getAttribute("value");
-      }
-      else {
-        break;
       }
     }
     return (true);
@@ -98,29 +102,41 @@ class ViewStream extends \DOMImplementation
 
   public function stream_read($count)
   {
-      if ($this->_eof || !$count) {
-        return '';
+    if (!$this->eof || !$count) {
+      $this->eof = true;
+      if (file_exists($this->getCachename())) {
+        return (file_get_contents($this->getCachename()));
       }
-      $this->_eof = true;
-      foreach ($this->Dom->getElementsByTagNameNS(ViewStream::TPL_NS, '*') as $TplNode) {
-        $this->unwrap($TplNode);
+      else {
+        foreach ($this->Dom->getElementsByTagNameNS(ViewStream::TPL_NS, '*') as $TplNode) {
+          $this->unwrap($TplNode);
+        }
+        return ($this->Dom->saveXML());
       }
-      return ($this->Dom->saveXML());
+    }
+    return ('');
   }
 
   public function stream_eof()
   {
-      return ($this->_eof);
+      return ($this->eof);
   }
 
   public function stream_stat()
   {
-    return (stat($this->filename));
+    return (stat($this->getFilename()));
   }
 
   public function __destruct()
   {
-    unset($this->View);
+    unset($this->Dom);
+  }
+
+  public function stream_flush()
+  {
+    if (!file_exists($this->getCachename())) {
+      file_put_contents($this->getCachename(), $this->Dom->saveXML());
+    }
   }
 }
 ?>

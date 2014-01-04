@@ -8,7 +8,7 @@ class ViewParser extends Parser
 
   public function __construct(\ViewStream $ViewStream)
   {
-    parent::__construct($ViewStream->filename);
+    parent::__construct($ViewStream->getFilename());
     $this->ViewStream  = $ViewStream;
     $this->prev_indent = 0;
 
