@@ -9,20 +9,15 @@ include 'Tags/TagStrategies/DoctypeStrategy.class.php';
 include 'Tags/TagStrategies/ScriptStrategy.class.php';
 include 'Parser.class.php';
 include 'CodeNode.class.php';
-include 'View.class.php';
 include 'ViewParser.class.php';
+include 'ViewStream.class.php';
 
 $startTime = microtime(true);
+$items     = array('game' => 10);
+stream_wrapper_register('phs', 'ViewStream');
 
-for ($i = 0; $i < 1; $i++) {
-  $View = View::fromFile('Views/part1.php');
-  var_dump($View->render(array(), true));
-}
 
-// $dom = new DomDocument();
+include 'phs://Views/part1.php';
 
-// $dom->loadHTMLFile ('_Cache/part1.php');
-
-// var_dump($dom->saveHTML());
 echo '<br/>'.number_format(microtime(true) - $startTime, 4), 's';
 ?>

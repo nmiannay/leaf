@@ -1,24 +1,23 @@
 doctype html
 html
   head
-    title Slim Examples
+    title Examples
     meta name="keywords" content="template language"
     meta name="author" content="author"
     script src="script.js"
 
   body
     h1 Markup examples
-    - $items = array(1)
     #content
-      p This example shows you how a basic Slim file looks like.
+      p This example shows you how a basic file looks like.
 
 
       - if !empty($items)
         table
-          - foreach $items as $item
+          - foreach $items as $name => $price
             tr
-              td.name = $item
-              td.price = $item
+              td.name = $name
+              td.price = $price
         @block:testblock
       - else
         p
@@ -26,4 +25,4 @@ html
           | Thank you!
     div id="footer"
       @render: 'Views/footer.php'
-      | Copyright © #{year} #{author}t
+      | Copyright © #{$year} #{$author}t
