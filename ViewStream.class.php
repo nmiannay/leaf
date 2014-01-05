@@ -15,10 +15,9 @@ class ViewStream extends \DOMImplementation
   private $options;
   private $eof = false;
 
-  private static $_isRegistered = false;
   const TPL_NS        = 'http://xyz';
   const SCHEME        = 'phs';
-  const CACHEDIR      = '_Cache/';
+  const CACHEDIR      = '._Cache/';
   const DIR_SEPARATOR = '_';
 
   public function __construct()
@@ -26,11 +25,14 @@ class ViewStream extends \DOMImplementation
     $this->Dom                     = $this->createDocument(null, null);
     $this->Dom->preserveWhiteSpace = false;
     $this->Dom->formatOutput       = true;
-    $this->TagsManager             = new TagsManager($this->Dom);
 
-    $this->TagsManager->registerStrategy('doctype', new TagStrategies\DoctypeStrategy());
-    $this->TagsManager->registerStrategy('script', new TagStrategies\ScriptStrategy());
-    $this->TagsManager->registerTempalateStrategy('render', new TemplateStrategies\RenderStrategy());
+    if ($this->need_to_rebuild()) {
+      $this->TagsManager = new TagsManager($this->Dom);
+
+      $this->TagsManager->registerStrategy('doctype', new TagStrategies\DoctypeStrategy());
+      $this->TagsManager->registerStrategy('script', new TagStrategies\ScriptStrategy());
+      $this->TagsManager->registerTempalateStrategy('render', new TemplateStrategies\RenderStrategy());
+    }
   }
 
   public function getDom() { return ($this->Dom); }
@@ -143,9 +145,9 @@ class ViewStream extends \DOMImplementation
 
   public function need_to_rebuild()
   {
-    $last_time = filemtime($this->getFilename());
-    return (!file_exists($this->getCachename()) || $last_time > filemtime($this->getCachename()));
+    return (!file_exists($this->getCachename()) || filemtime($this->getFilename()) > filemtime($this->getCachename()));
   }
+
   public function stream_flush()
   {
     if ($this->need_to_rebuild()) {

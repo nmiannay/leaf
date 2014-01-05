@@ -1,16 +1,5 @@
 <?php
-include 'Tags/TagsManager.class.php';
-include 'Tags/TemplateStrategies/Strategy.class.php';
-include 'Tags/TemplateStrategies/DefaultStrategy.class.php';
-include 'Tags/TemplateStrategies/RenderStrategy.class.php';
-include 'Tags/TagStrategies/Strategy.class.php';
-include 'Tags/TagStrategies/DefaultStrategy.class.php';
-include 'Tags/TagStrategies/DoctypeStrategy.class.php';
-include 'Tags/TagStrategies/ScriptStrategy.class.php';
-include 'Parser.class.php';
-include 'CodeNode.class.php';
-include 'ViewParser.class.php';
-include 'ViewStream.class.php';
+require 'autoload.php';
 
 $startTime = microtime(true);
 $items     = array('game' => 10);
