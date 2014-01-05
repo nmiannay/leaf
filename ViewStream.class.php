@@ -149,6 +149,9 @@ class ViewStream extends \DOMImplementation
   public function stream_flush()
   {
     if ($this->need_to_rebuild()) {
+      if (!file_exists(self::CACHEDIR)) {
+        mkdir(self::CACHEDIR);
+      }
       touch($this->getCachename(), filemtime($this->getFilename()));
       file_put_contents($this->getCachename(), $this->Dom->saveXML());
     }
