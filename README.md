@@ -99,10 +99,10 @@ To set yout html attributes just seprate them by a space:
 
     a href='/login' title='View login page'
 
-Note 1: You can also nest text value after an argument list
+Note 1: You can also embed text after an argument list
 
     a href='/login' title='View login page' Login
-Note 2: Leading / trailing whitespace is _ignore_ for attr pairs.
+Note 2: Leading / Trailing whitespaces are _ignored_ for attributes.
 
 ### Doctypes
 
