@@ -12,11 +12,11 @@ class ViewStream extends \DOMImplementation
   private $mode;
   private $url;
   private $opened_path;
-  private $options;
+  private $options = array();
   private $eof = false;
 
   const TPL_NS        = 'http://xyz';
-  const SCHEME        = 'phs';
+  const SCHEME        = 'leaf';
   const CACHEDIR      = '._Cache/';
   const DIR_SEPARATOR = '_';
 
@@ -36,10 +36,15 @@ class ViewStream extends \DOMImplementation
   }
 
   public function getDom() { return ($this->Dom); }
-  public function getFilename() { return ($this->opened_path ?: $this->url['host'].$this->url['path']); }
+  public function getFilename() { return ($this->opened_path ?: $this->url['host'].(isset($this->url['path']) ? $this->url['path'] : '')); }
   public function getCachename() { return (self::CACHEDIR.str_replace('/', self::DIR_SEPARATOR, $this->getFilename())); }
   public function getTagsManager() { return ($this->TagsManager); }
 
+
+  public function cache_is_active()
+  {
+    return (isset($this->options['cache']) && (bool) $this->options['cache'] && $this->options['cache'] !== 'false');
+  }
   private function mergeWith(\DomDocument $Child)
   {
     $ParentBlocks = $this->Dom->getElementsByTagName('block');
@@ -78,8 +83,13 @@ class ViewStream extends \DOMImplementation
     $this->url         = parse_url($path);
     $this->opened_path = $opened_path;
     $this->mode        = $mode;
-    $this->options     = $options;
+    $this->options     = $options ?: [];
     $extended_file     = null;
+
+    if (isset($this->url['query'])) {
+      parse_str($this->url['query'], $output);
+      $this->options += $output;
+    }
 
     try {
       if ($this->need_to_rebuild()) {
@@ -135,7 +145,9 @@ class ViewStream extends \DOMImplementation
 
   public function stream_stat()
   {
-    return (stat($this->getFilename()));
+    if (file_exists($this->getFilename())) {
+      return (stat($this->getFilename()));
+    }
   }
 
   public function __destruct()
@@ -150,7 +162,7 @@ class ViewStream extends \DOMImplementation
 
   public function stream_flush()
   {
-    if ($this->need_to_rebuild()) {
+    if ($this->cache_is_active() && $this->need_to_rebuild()) {
       if (!file_exists(self::CACHEDIR)) {
         mkdir(self::CACHEDIR);
       }

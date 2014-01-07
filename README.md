@@ -16,8 +16,9 @@ and implemented for PHP 5.4.
 
 ## Usage
     require 'autoload.php';
-    stream_wrapper_register('phs', 'ViewStream'); // Register Stream wrapper
-    include 'phs://Views/part1.php';
+
+    stream_wrapper_register(ViewStream::SCHEME, 'ViewStream') or die("Failed to register protocol");
+    include 'leaf://Views/part1.php';
 
 ## Syntax
 

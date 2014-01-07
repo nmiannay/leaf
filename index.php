@@ -1,12 +1,10 @@
 <?php
 require 'autoload.php';
-
 $startTime = microtime(true);
 $items     = array('game' => 10);
-stream_wrapper_register('phs', 'ViewStream');
+stream_wrapper_register(ViewStream::SCHEME, 'ViewStream') or die("Failed to register protocol");
 
-
-include 'phs://Views/part1.php';
+include 'leaf://Views/part1.php';
 
 echo '<br/>'.number_format(microtime(true) - $startTime, 4), 's';
 ?>
