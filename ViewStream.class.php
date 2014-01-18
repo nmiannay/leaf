@@ -5,6 +5,7 @@
 use Tags\TagsManager;
 use Tags\TagStrategies;
 use Tags\TemplateStrategies;
+use Tags\CodeStrategies;
 class ViewStream extends \DOMImplementation
 {
   private $Dom;
@@ -13,26 +14,32 @@ class ViewStream extends \DOMImplementation
   private $url;
   private $opened_path;
   private $options = array();
-  private $eof = false;
+  private $eof     = false;
 
   const TPL_NS        = 'http://xyz';
+  const PHP_NS        = 'http://php.net';
   const SCHEME        = 'leaf';
   const CACHEDIR      = '._Cache/';
   const DIR_SEPARATOR = '_';
 
   public function __construct()
   {
+    // var_dump(__FUNCTION__);
     $this->Dom                     = $this->createDocument(null, null);
+    $this->Dom->encoding           = 'UTF-8';
     $this->Dom->preserveWhiteSpace = false;
     $this->Dom->formatOutput       = true;
+    $this->Dom->substituteEntities = true;
+    $this->TagsManager             = new TagsManager($this->Dom);
 
-    if ($this->need_to_rebuild()) {
-      $this->TagsManager = new TagsManager($this->Dom);
-
-      $this->TagsManager->registerStrategy('doctype', new TagStrategies\DoctypeStrategy());
-      $this->TagsManager->registerStrategy('script', new TagStrategies\ScriptStrategy());
-      $this->TagsManager->registerTempalateStrategy('render', new TemplateStrategies\RenderStrategy());
-    }
+    $this->Dom->registerNodeClass('DOMProcessingInstruction', 'Tags\CodeNodes\PhpNode');
+    $this->TagsManager->registerStrategy('doctype', new TagStrategies\DoctypeStrategy());
+    $this->TagsManager->registerTempalateStrategy('render', new TemplateStrategies\RenderStrategy());
+    $this->TagsManager->registerCodeStrategy('foreach', new CodeStrategies\LoopStrategy());
+    $this->TagsManager->registerCodeStrategy('for', new CodeStrategies\LoopStrategy());
+    $this->TagsManager->registerCodeStrategy('while', new CodeStrategies\LoopStrategy());
+    $this->TagsManager->registerCodeStrategy('if', new CodeStrategies\ConditionalStrategy());
+    $this->TagsManager->registerCodeStrategy('else', new CodeStrategies\ConditionalStrategy());
   }
 
   public function getDom() { return ($this->Dom); }
@@ -80,6 +87,7 @@ class ViewStream extends \DOMImplementation
 
   public function stream_open($path, $mode, $options, &$opened_path)
   {
+    // var_dump(__FUNCTION__);
     $this->url         = parse_url($path);
     $this->opened_path = $opened_path;
     $this->mode        = $mode;
@@ -121,18 +129,18 @@ class ViewStream extends \DOMImplementation
 
   public function stream_read($count)
   {
+    // var_dump(__FUNCTION__);
     if (!$this->eof || !$count) {
       $this->eof = true;
-      if (!$this->need_to_rebuild()) {
-        return (file_get_contents($this->getCachename()));
-      }
-      else {
+      // if (!$this->need_to_rebuild()) {
+      //   return (file_get_contents($this->getCachename()));
+      // }
+      // else {
         foreach ($this->Dom->getElementsByTagNameNS(ViewStream::TPL_NS, '*') as $TplNode) {
           $this->unwrap($TplNode);
         }
-
         return ($this->Dom->saveXML());
-      }
+      // }
     }
 
     return ('');
@@ -140,11 +148,13 @@ class ViewStream extends \DOMImplementation
 
   public function stream_eof()
   {
+    // var_dump(__FUNCTION__);
       return ($this->eof);
   }
 
   public function stream_stat()
   {
+    // var_dump(__FUNCTION__);
     if (file_exists($this->getFilename())) {
       return (stat($this->getFilename()));
     }
@@ -152,23 +162,28 @@ class ViewStream extends \DOMImplementation
 
   public function __destruct()
   {
+    // var_dump(__FUNCTION__);
     unset($this->Dom);
   }
 
   public function need_to_rebuild()
   {
+    // var_dump(__FUNCTION__);
+    return (true);
     return (!file_exists($this->getCachename()) || filemtime($this->getFilename()) > filemtime($this->getCachename()));
   }
 
   public function stream_flush()
   {
-    if ($this->cache_is_active() && $this->need_to_rebuild()) {
+    // var_dump(__FUNCTION__);
+    // if ($this->cache_is_active() && $this->need_to_rebuild()) {
       if (!file_exists(self::CACHEDIR)) {
         mkdir(self::CACHEDIR);
       }
       touch($this->getCachename(), filemtime($this->getFilename()));
       file_put_contents($this->getCachename(), $this->Dom->saveXML());
+      // exit();
     }
-  }
+  // }
 }
 ?>

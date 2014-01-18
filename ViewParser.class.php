@@ -59,12 +59,7 @@ class ViewParser extends Parser
       case '-':
         $this->eat('-');
         $this->lookAhead() != ' ' ?: $this->eat();
-
-        $Node = $this->parseCode();
-        if ($Node->data == 'else: ') {
-          $this->stack_length--;
-          $indent += 2;
-        }
+        $Node = $this->parseCode($indent);
       break;
       case '<':
         $this->eat('<');
@@ -101,6 +96,7 @@ class ViewParser extends Parser
       if ($_c == '=') {
         if ($text == '') {
           $Node = $this->ViewStream->getTagsManager()->buildNode($tagName, $text, $attributes);
+          $this->trim(' ');
           $Node->appendChild($this->parseEcho());
 
           return ($Node);
@@ -141,9 +137,16 @@ class ViewParser extends Parser
 
     return (new \DOMProcessingInstruction ('php', 'echo ' . $text . '; '));
   }
-  private  function parseCode()
+  private  function parseCode(&$indent)
   {
-    return (new CodeNode('php', $this->eatUntil(PHP_EOL)));
+    $type = $this->eatUntil(' ('.PHP_EOL);
+
+    if ($type !== '') {
+      $this->trim(' ');
+      return ($this->ViewStream->getTagsManager()->buildCode($type, $this->eatUntil(PHP_EOL), $indent));
+    }
+
+    return (null);
   }
   private  function parsePureHTML()
   {
@@ -160,8 +163,8 @@ class ViewParser extends Parser
     if ($this->lookAhead() == '>') {
       $this->eat();
     }
-    $text = $this->eatUntil('<'.PHP_EOL);
-    return ($this->ViewStream->getTagsManager()->buildNode($tagName, $text, $attributes));
+
+    return ($this->ViewStream->getTagsManager()->buildNode($tagName, $this->eatUntil('<'.PHP_EOL), $attributes));
   }
 
   private  function parseTemplating()

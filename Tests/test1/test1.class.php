@@ -138,7 +138,7 @@ HTML
 //COMMENT
   public function test_comment()
   {
-    $expect  = '<?xml version="1.0" encoding="UTF-8"?><?php $foo = "bar"; ?><p><?php echo $foo ?></p>';
+    $expect  = '<?xml version="1.0" encoding="UTF-8"?><?php $foo = "bar"; ?><p><?php echo $foo; ?></p>';
     $reality = $this->evalLeaf(
 <<<'HTML'
 / TODO
@@ -177,7 +177,7 @@ HTML
 
   public function test_if_else()
   {
-    $expect  = '<?xml version="1.0" encoding="UTF-8"?><?php if ($foo): ?><ul><li>yay</li><li>foo</li><li>worked</li><?php else: ?><li><p>hey! didnt work</p></li></ul><?php endif; ?>';
+    $expect  = '<?xml version="1.0" encoding="UTF-8"?><?php if ($foo): ?><ul><li>yay</li><li>foo</li><li>worked</li></ul><?php else: ?><p>hey! didnt work</p><?php endif; ?>';
     $reality = $this->evalLeaf(
 <<<'HTML'
 - if $foo
@@ -195,7 +195,7 @@ HTML
 
   public function test_echoed()
   {
-    $expect  = '<?xml version="1.0" encoding="UTF-8"?><?php $foo = \'bar\' ?><?php echo $foo; ?><h1><?php echo $foo; ?></h1>';
+    $expect  = '<?xml version="1.0" encoding="UTF-8"?><?php $foo = \'bar\'; ?><?php echo $foo; ?><h1><?php echo $foo; ?></h1>';
     $reality = $this->evalLeaf(
 <<<'HTML'
 - $foo = 'bar'

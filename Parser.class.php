@@ -116,7 +116,7 @@ abstract class Parser extends \SplFileObject
   */
   protected function lookBehind($n = 1)
   {
-    return (isset($this->line[$this->charno - $n]) ? $this->line[$this->charno - $n] : false);
+    return (!isset($this->line[$this->charno - $n])?: $this->line[$this->charno - $n]);
   }
 
   public function next()
