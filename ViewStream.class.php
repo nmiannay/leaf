@@ -17,7 +17,6 @@ class ViewStream extends \DOMImplementation
   private $eof     = false;
 
   const TPL_NS        = 'http://xyz';
-  const PHP_NS        = 'http://php.net';
   const SCHEME        = 'leaf';
   const CACHEDIR      = '._Cache/';
   const DIR_SEPARATOR = '_';
@@ -29,7 +28,7 @@ class ViewStream extends \DOMImplementation
     $this->Dom->encoding           = 'UTF-8';
     $this->Dom->preserveWhiteSpace = false;
     $this->Dom->formatOutput       = true;
-    $this->Dom->substituteEntities = true;
+    // $this->Dom->substituteEntities = true;
     $this->TagsManager             = new TagsManager($this->Dom);
 
     $this->Dom->registerNodeClass('DOMProcessingInstruction', 'Tags\CodeNodes\PhpNode');
@@ -50,7 +49,7 @@ class ViewStream extends \DOMImplementation
 
   public function cache_is_active()
   {
-    return (isset($this->options['cache']) && (bool) $this->options['cache'] && $this->options['cache'] !== 'false');
+    return (!isset($this->options['cache']) || ((bool) $this->options['cache'] && $this->options['cache'] !== 'false'));
   }
   private function mergeWith(\DomDocument $Child)
   {
@@ -91,7 +90,6 @@ class ViewStream extends \DOMImplementation
     $this->url         = parse_url($path);
     $this->opened_path = $opened_path;
     $this->mode        = $mode;
-    $this->options     = $options ?: [];
     $extended_file     = null;
 
     if (isset($this->url['query'])) {
@@ -122,8 +120,8 @@ class ViewStream extends \DOMImplementation
       return (true);
     }
     catch (\Exception $E) {
-      throw new \Exception($E->getMessage(), $E->getCode());
       return (false);
+      throw new \Exception($E->getMessage(), $E->getCode());
     }
   }
 
@@ -132,15 +130,15 @@ class ViewStream extends \DOMImplementation
     // var_dump(__FUNCTION__);
     if (!$this->eof || !$count) {
       $this->eof = true;
-      // if (!$this->need_to_rebuild()) {
-      //   return (file_get_contents($this->getCachename()));
-      // }
-      // else {
+      if (!$this->need_to_rebuild()) {
+        return (file_get_contents($this->getCachename()));
+      }
+      else {
         foreach ($this->Dom->getElementsByTagNameNS(ViewStream::TPL_NS, '*') as $TplNode) {
           $this->unwrap($TplNode);
         }
         return ($this->Dom->saveXML());
-      // }
+      }
     }
 
     return ('');
@@ -163,20 +161,19 @@ class ViewStream extends \DOMImplementation
   public function __destruct()
   {
     // var_dump(__FUNCTION__);
-    unset($this->Dom);
+    // unset($this->Dom);
   }
 
   public function need_to_rebuild()
   {
     // var_dump(__FUNCTION__);
-    return (true);
     return (!file_exists($this->getCachename()) || filemtime($this->getFilename()) > filemtime($this->getCachename()));
   }
 
   public function stream_flush()
   {
     // var_dump(__FUNCTION__);
-    // if ($this->cache_is_active() && $this->need_to_rebuild()) {
+    if ($this->cache_is_active() && $this->need_to_rebuild()) {
       if (!file_exists(self::CACHEDIR)) {
         mkdir(self::CACHEDIR);
       }
@@ -184,6 +181,6 @@ class ViewStream extends \DOMImplementation
       file_put_contents($this->getCachename(), $this->Dom->saveXML());
       // exit();
     }
-  // }
+  }
 }
 ?>

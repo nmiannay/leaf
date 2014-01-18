@@ -61,9 +61,9 @@ HTML
     $reality = $this->evalLeaf(
 <<<HTML
 p
-  | foo bar baz
-  | rawr rawr
-  | super cool
+  | foo bar baz 
+  | rawr rawr 
+  | super cool 
   | go Leaf go
 HTML
 );
