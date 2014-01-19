@@ -128,7 +128,24 @@ class ViewParser extends Parser
 
   private  function parseText()
   {
-    return (new \DOMText($this->eatUntil(PHP_EOL)));
+    $str      = '';
+    $Fragment = $this->ViewStream->getDom()->createDocumentFragment();
+
+    while (($_c = $this->eat()) !== PHP_EOL) {
+      if ($_c == '#' && $this->lookAhead() == '{') {
+        $this->eat();
+        $Fragment->appendChild(new \DOMText($str));
+        $Fragment->appendChild(new \Tags\CodeNodes\PhpNode('echo ' . $this->eatUntil('}') . '; '));
+        $str = '';
+      }
+      else {
+        $str .= $_c;
+      }
+    }
+    if ($str != '') {
+      $Fragment->appendChild(new \DOMText($str));
+    }
+    return ($Fragment);
   }
 
   private  function parseEcho()
