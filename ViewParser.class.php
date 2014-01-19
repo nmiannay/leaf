@@ -85,7 +85,6 @@ class ViewParser extends Parser
     $attributes = array();
     $text       = '';
 
-    // var_dump($this->ViewStream->getFilename(), $this->line);
     for ($_lb = $this->lookBehind(); $_lb == '.' || $_lb == '#'; $_lb = $this->lookBehind())
     {
       if (($_val = $this->eatUntil('.# ' . PHP_EOL)) != '') {

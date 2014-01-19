@@ -34,6 +34,7 @@ class ViewStream extends \DOMImplementation
     $this->Dom->registerNodeClass('DOMProcessingInstruction', 'Tags\CodeNodes\PhpNode');
     $this->TagsManager->registerStrategy('doctype', new TagStrategies\DoctypeStrategy());
     $this->TagsManager->registerTempalateStrategy('render', new TemplateStrategies\RenderStrategy());
+    $this->TagsManager->registerCodeStrategy('function', new CodeStrategies\FunctionStrategy());
     $this->TagsManager->registerCodeStrategy('foreach', new CodeStrategies\LoopStrategy());
     $this->TagsManager->registerCodeStrategy('for', new CodeStrategies\LoopStrategy());
     $this->TagsManager->registerCodeStrategy('while', new CodeStrategies\LoopStrategy());
@@ -120,8 +121,8 @@ class ViewStream extends \DOMImplementation
       return (true);
     }
     catch (\Exception $E) {
-      return (false);
       throw new \Exception($E->getMessage(), $E->getCode());
+      return (false);
     }
   }
 

@@ -7,11 +7,11 @@ class ConditionalStrategy extends Strategy
   {
     if ($type == 'else') {
       $indent += 2;
-      return (new \DOMProcessingInstruction ('php', 'else: '));
+      return (new \Tags\CodeNodes\PhpNode ('else: '));
     }
     while (preg_match('/^\((.*)\)$/', $code)) {
       $code = substr($code, 1, -1);
     }
-    return (new \Tags\CodeNodes\ScopedNode($type . ' (' . $code . '):', 'endif'));
+    return (new \Tags\CodeNodes\PhpNode($type . ' (' . $code . '):', 'endif'));
   }
 }

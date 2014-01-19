@@ -5,28 +5,28 @@ namespace Tags\CodeNodes;
 */
 class PhpNode extends \DOMProcessingInstruction
 {
-  public function __construct($value = null)
+  protected $closingTag = null;
+  public function __construct($value, $closure = null)
   {
-    parent::__construct('php', $value.' ');
+    parent::__construct('php', $value);
+    if ($closure !== null) {
+      $this->closingTag = new \DOMProcessingInstruction ('php', $closure.'; ');
+    }
   }
-
 
   public function appendChild(\DOMNode $newChild)
   {
-    if ($newChild instanceof PhpNode){
-      $code = array();
-
-      if ($this->data[0] != "\n") {
-        $code[] = "";
-        $this->data = substr($this->data, 0, -2).'{';
-      }
-      $code[] = rtrim($this->data, "}\n");
-      $code[] = rtrim($newChild->data, ' ');
-      $code[] = "}";
-
-      $this->data = implode("\n", $code);
+    if ($this->closingTag === null) {
+      $this->closingTag = $this->nextSibling;
     }
-    else
-      $this->parentNode->appendChild($newChild);
+    elseif ($this->closingTag->ownerDocument === null) {
+      if ($this !== $this->parentNode->lastChild) {
+        $this->parentNode->insertBefore($this->closingTag, $this->parentNode->lastChild);
+      }
+      else {
+        $this->parentNode->appendChild($this->closingTag);
+      }
+    }
+    $this->parentNode->insertBefore($newChild, $this->closingTag);
   }
 }
