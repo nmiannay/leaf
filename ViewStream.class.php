@@ -40,6 +40,7 @@ class ViewStream extends \DOMImplementation
     $this->TagsManager->registerCodeStrategy('while', new CodeStrategies\LoopStrategy());
     $this->TagsManager->registerCodeStrategy('if', new CodeStrategies\ConditionalStrategy());
     $this->TagsManager->registerCodeStrategy('else', new CodeStrategies\ConditionalStrategy());
+    $this->TagsManager->registerCodeStrategy('elseif', new CodeStrategies\ConditionalStrategy());
   }
 
   public function getDom() { return ($this->Dom); }

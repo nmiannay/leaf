@@ -12,7 +12,9 @@ html
       p This example shows you how a basic file looks like.
 
 
-      - if !empty($items)
+      - if is_string($items)
+        p.error Must be an array!
+      - elseif !empty($items)
         table
           - foreach $items as $name => $price
             tr
