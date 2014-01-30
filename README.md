@@ -1,3 +1,5 @@
+[![Bitdeli Badge](https://d2weczhvl823v0.cloudfront.net/miannay-nicolas/leaf/trend.png)](https://bitdeli.com/free "Bitdeli Badge")
+
 # Leaf - template compiler for PHP5.4
 
 *Leaf* is a template compiler heavily influenced by [Haml](http://haml-lang.com)
