@@ -119,7 +119,7 @@ class ViewParser extends Parser
   {
     $openChar = $this->lookAhead();
     if ($openChar != '"' && $openChar != "'") {
-      return ('php echo '.$this->eatUntil(' ' . PHP_EOL).'; ');
+      return ('php echo '.$this->eatUntil(' ' . PHP_EOL).';');
     }
     $this->eat();
 
@@ -135,8 +135,22 @@ class ViewParser extends Parser
       if ($_c == '#' && $this->lookAhead() == '{') {
         $this->eat();
         $Fragment->appendChild(new \DOMText($str));
-        $Fragment->appendChild(new \Tags\CodeNodes\PhpNode('echo ' . $this->eatUntil('}') . '; '));
+        $Fragment->appendChild(new \Tags\CodeNodes\PhpNode('echo ' . $this->eatUntil('}') . ';'));
         $str = '';
+      }
+      else if ($_c == '&' && ctype_alpha($this->lookAhead())) {
+        for ($reference = $this->eat(); ctype_alpha($this->lookAhead()); $this->eat()) {
+          $reference .= $this->lookAhead();
+        }
+        if ($this->lookAhead() == ';') {
+          $this->eat();
+          $Fragment->appendChild(new \DOMText($str));
+          $Fragment->appendChild(new \DOMEntityReference($reference));
+          $str = '';
+        }
+        else {
+          $str .= '&'.$reference;
+        }
       }
       else {
         $str .= $_c;
@@ -152,7 +166,7 @@ class ViewParser extends Parser
   {
     $text = $this->eatUntil(PHP_EOL);
 
-    return (new \DOMProcessingInstruction ('php', 'echo ' . $text . '; '));
+    return (new \DOMProcessingInstruction ('php', 'echo ' . $text . ';'));
   }
   private  function parseCode(&$indent)
   {

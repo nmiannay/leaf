@@ -16,7 +16,7 @@ class Test
   public function evalLeaf($leaf)
   {
     file_put_contents(Test::FILEMANE, $leaf);
-    $html = file_get_contents('leaf://'.Test::FILEMANE);
+    $html = file_get_contents('leaf://'.Test::FILEMANE.'?cache=false');
 
     return (preg_replace('/[\n\r]/', '', $html));
   }

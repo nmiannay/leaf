@@ -10,7 +10,7 @@ class PhpNode extends \DOMProcessingInstruction
   {
     parent::__construct('php', $value);
     if ($closure !== null) {
-      $this->closingTag = new \DOMProcessingInstruction ('php', $closure.'; ');
+      $this->closingTag = new \DOMProcessingInstruction ('php', $closure.';');
     }
   }
 

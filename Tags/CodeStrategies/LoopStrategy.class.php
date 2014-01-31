@@ -10,7 +10,7 @@ class LoopStrategy extends Strategy
     while (preg_match('/^\((.*)\)$/', $code)) {
       $code = substr($code, 1, -1);
     }
-    return (new \Tags\CodeNodes\PhpNode($type . ' (' . $code . '):', 'end'.$type));
+    return (new \Tags\CodeNodes\PhpNode($type . '(' . $code . '):', 'end'.$type));
   }
 }
 ?>

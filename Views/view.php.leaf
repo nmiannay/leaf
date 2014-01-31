@@ -27,4 +27,4 @@ html
           | Thank you!
     div id="footer"
       @render: 'Views/footer.php.leaf'
-      | Copyright © #{$year} #{$author}
+      | &Copyright &copy; #{$year} #{$author}

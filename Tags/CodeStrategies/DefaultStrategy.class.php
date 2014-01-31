@@ -13,7 +13,7 @@ class DefaultStrategy extends Strategy
     if (substr($code, -1, 1) == ';') {
       return (new \Tags\CodeNodes\PhpNode ($str));
     }
-    return (new \Tags\CodeNodes\PhpNode ($str . '; '));
+    return (new \Tags\CodeNodes\PhpNode ($str . ';'));
   }
 }
 ?>

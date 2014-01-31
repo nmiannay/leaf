@@ -72,7 +72,7 @@ HTML
 
   public function test_echo()
   {
-    $expect  = '<?xml version="1.0" encoding="UTF-8"?><p><?php echo $something; ?></p>';
+    $expect  = '<?xml version="1.0" encoding="UTF-8"?><p><?php echo $something;?></p>';
     $reality = $this->evalLeaf(
 <<<'HTML'
 p
@@ -84,7 +84,7 @@ HTML
 
   public function test_nesting()
   {
-    $expect  = '<?xml version="1.0" encoding="UTF-8"?><ul><li>one</li><li><?php echo $two; ?></li><li>three</li></ul>';
+    $expect  = '<?xml version="1.0" encoding="UTF-8"?><ul><li>one</li><li><?php echo $two;?></li><li>three</li></ul>';
     $reality = $this->evalLeaf(
 <<<'HTML'
 ul
@@ -138,7 +138,7 @@ HTML
 //COMMENT
   public function test_comment()
   {
-    $expect  = '<?xml version="1.0" encoding="UTF-8"?><?php $foo = "bar"; ?><p><?php echo $foo; ?></p>';
+    $expect  = '<?xml version="1.0" encoding="UTF-8"?><?php $foo = "bar";?><p><?php echo $foo;?></p>';
     $reality = $this->evalLeaf(
 <<<'HTML'
 / TODO
@@ -156,7 +156,7 @@ HTML
 //CODE
   public function test_affectation()
   {
-    $expect  = '<?xml version="1.0" encoding="UTF-8"?><?php var $foo = \'bar\'; ?>';
+    $expect  = '<?xml version="1.0" encoding="UTF-8"?><?php var $foo = \'bar\';?>';
     $reality = $this->evalLeaf('- var $foo = \'bar\';');
 
     $this->assertEqual($reality, $expect);
@@ -164,7 +164,7 @@ HTML
 
   public function test_foreach()
   {
-    $expect  = '<?xml version="1.0" encoding="UTF-8"?><?php foreach ($items as $item): ?><p><?php echo $item; ?></p><?php endforeach; ?>';
+    $expect  = '<?xml version="1.0" encoding="UTF-8"?><?php foreach($items as $item):?><p><?php echo $item;?></p><?php endforeach;?>';
     $reality = $this->evalLeaf(
 <<<'HTML'
 - foreach $items as $item
@@ -177,7 +177,7 @@ HTML
 
   public function test_if_else()
   {
-    $expect  = '<?xml version="1.0" encoding="UTF-8"?><?php if ($foo): ?><ul><li>yay</li><li>foo</li><li>worked</li></ul><?php else: ?><p>hey! didnt work</p><?php endif; ?>';
+    $expect  = '<?xml version="1.0" encoding="UTF-8"?><?php if($foo):?><ul><li>yay</li><li>foo</li><li>worked</li></ul><?php else:?><p>hey! didnt work</p><?php endif;?>';
     $reality = $this->evalLeaf(
 <<<'HTML'
 - if $foo
@@ -195,7 +195,7 @@ HTML
 
   public function test_echoed()
   {
-    $expect  = '<?xml version="1.0" encoding="UTF-8"?><?php $foo = \'bar\'; ?><?php echo $foo; ?><h1><?php echo $foo; ?></h1>';
+    $expect  = '<?xml version="1.0" encoding="UTF-8"?><?php $foo = \'bar\';?><?php echo $foo;?><h1><?php echo $foo;?></h1>';
     $reality = $this->evalLeaf(
 <<<'HTML'
 - $foo = 'bar'
@@ -209,7 +209,7 @@ HTML
 
   public function test_while()
   {
-    $expect  = '<?xml version="1.0" encoding="UTF-8"?><ul><?php while (true): ?><li>item</li><?php endwhile; ?></ul>';
+    $expect  = '<?xml version="1.0" encoding="UTF-8"?><ul><?php while(true):?><li>item</li><?php endwhile;?></ul>';
     $reality = $this->evalLeaf(
 <<<HTML
 ul
