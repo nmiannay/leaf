@@ -15,13 +15,18 @@ html
         p.error Must be an array!
       - elseif !empty($items)
         table
-          - foreach $items as $name => $price
+          tbody
+            - foreach $items as $name => $price
+              tr
+                td.name = $name
+                td.price = $price
+                td > button:btn-primary Buy
+                td test=$name
+          tfoot
             tr
-              td.name = $name
-              td.price = $price
-              td > button:btn-primary Buy
-              td test=$name
-        @block:testblock
+              td
+                @block:testblock
+                  | parent content
       - else
         p
           | No items found.  Please add some inventory.

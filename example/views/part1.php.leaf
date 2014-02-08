@@ -1,4 +1,4 @@
-@extends: 'Views/view.php.leaf'
+@extends: 'view.php.leaf'
 
 @block: testblock
   div.test.#teplop class="tet" id="te"

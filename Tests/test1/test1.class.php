@@ -7,28 +7,28 @@ class Test1 extends Test
 
   public function test_simple_tag()
   {
-    $expect  = '<?xml version="1.0" encoding="UTF-8"?><html></html>';
+    $expect  = '<html></html>';
     $reality = $this->evalLeaf('html');
 
     $this->assertEqual($reality, $expect);
   }
   public function test_short_id()
   {
-    $expect  = '<?xml version="1.0" encoding="UTF-8"?><div id="container"></div>';
+    $expect  = '<div id="container"></div>';
     $reality = $this->evalLeaf('div#container');
 
     $this->assertEqual($reality, $expect);
   }
   public function test_short_class()
   {
-    $expect  = '<?xml version="1.0" encoding="UTF-8"?><div class="user-details"></div>';
+    $expect  = '<div class="user-details"></div>';
     $reality = $this->evalLeaf('div.user-details');
 
     $this->assertEqual($reality, $expect);
   }
   public function test_short_id_and_short_class()
   {
-    $expect  = '<?xml version="1.0" encoding="UTF-8"?><div id="foo" class="bar baz"></div>';
+    $expect  = '<div id="foo" class="bar baz"></div>';
     $reality = $this->evalLeaf('div#foo.bar.baz');
 
     $this->assertEqual($reality, $expect);
@@ -36,7 +36,7 @@ class Test1 extends Test
 
   public function test_syntactic_sugar_for_div()
   {
-    $expect  = '<?xml version="1.0" encoding="UTF-8"?><div id="foo"></div><div class="bar"></div>';
+    $expect  = '<div id="foo"></div><div class="bar"></div>';
     $reality = $this->evalLeaf(
 <<<HTML
 #foo
@@ -49,7 +49,7 @@ HTML
 
   public function test_tag_text()
   {
-    $expect  = '<?xml version="1.0" encoding="UTF-8"?><p>wahoo!</p>';
+    $expect  = '<p>wahoo!</p>';
     $reality = $this->evalLeaf('p wahoo!');
 
     $this->assertEqual($reality, $expect);
@@ -57,7 +57,7 @@ HTML
 
   public function test_large_bodies_text()
   {
-    $expect  = '<?xml version="1.0" encoding="UTF-8"?><p>foo bar baz rawr rawr super cool go Leaf go</p>';
+    $expect  = '<p>foo bar baz rawr rawr super cool go Leaf go</p>';
     $reality = $this->evalLeaf(
 <<<HTML
 p
@@ -72,7 +72,7 @@ HTML
 
   public function test_echo()
   {
-    $expect  = '<?xml version="1.0" encoding="UTF-8"?><p><?php echo $something;?></p>';
+    $expect  = '<p><?php echo $something;?></p>';
     $reality = $this->evalLeaf(
 <<<'HTML'
 p
@@ -84,7 +84,7 @@ HTML
 
   public function test_nesting()
   {
-    $expect  = '<?xml version="1.0" encoding="UTF-8"?><ul><li>one</li><li><?php echo $two;?></li><li>three</li></ul>';
+    $expect  = '<ul><li>one</li><li><?php echo $two;?></li><li>three</li></ul>';
     $reality = $this->evalLeaf(
 <<<'HTML'
 ul
@@ -98,7 +98,7 @@ HTML
 
   public function test_attributes()
   {
-    $expect  = '<?xml version="1.0" encoding="UTF-8"?><a href="/login" title="View login page"></a>';
+    $expect  = '<a href="/login" title="View login page"></a>';
     $reality = $this->evalLeaf("a href='/login' title='View login page'");
 
     $this->assertEqual($reality, $expect);
@@ -106,7 +106,7 @@ HTML
 
   public function test_attributes_and_text()
   {
-    $expect  = '<?xml version="1.0" encoding="UTF-8"?><a href="/login" title="View login page">Login</a>';
+    $expect  = '<a href="/login" title="View login page">Login</a>';
     $reality = $this->evalLeaf("a href='/login' title='View login page' Login");
 
     $this->assertEqual($reality, $expect);
@@ -114,7 +114,7 @@ HTML
 
   public function test_doctype()
   {
-    $expect  = '<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html>';
+    $expect  = '<!DOCTYPE html>';
     $reality = $this->evalLeaf("doctype html");
 
     $this->assertEqual($reality, $expect);
@@ -122,7 +122,7 @@ HTML
 
   public function test_pure_html()
   {
-    $expect  = '<?xml version="1.0" encoding="UTF-8"?><div class="foo"><p id="myP">bar</p><div><p>foo</p></div></div>';
+    $expect  = '<div class="foo"><p id="myP">bar</p><div><p>foo</p></div></div>';
     $reality = $this->evalLeaf(
 <<<HTML
 div.foo
@@ -138,7 +138,7 @@ HTML
 //COMMENT
   public function test_comment()
   {
-    $expect  = '<?xml version="1.0" encoding="UTF-8"?><?php $foo = "bar";?><p><?php echo $foo;?></p>';
+    $expect  = '<?php $foo = "bar";?><p><?php echo $foo;?></p>';
     $reality = $this->evalLeaf(
 <<<'HTML'
 / TODO
@@ -156,7 +156,7 @@ HTML
 //CODE
   public function test_affectation()
   {
-    $expect  = '<?xml version="1.0" encoding="UTF-8"?><?php var $foo = \'bar\';?>';
+    $expect  = '<?php var $foo = \'bar\';?>';
     $reality = $this->evalLeaf('- var $foo = \'bar\';');
 
     $this->assertEqual($reality, $expect);
@@ -164,7 +164,7 @@ HTML
 
   public function test_foreach()
   {
-    $expect  = '<?xml version="1.0" encoding="UTF-8"?><?php foreach($items as $item):?><p><?php echo $item;?></p><?php endforeach;?>';
+    $expect  = '<?php foreach($items as $item):?><p><?php echo $item;?></p><?php endforeach;?>';
     $reality = $this->evalLeaf(
 <<<'HTML'
 - foreach $items as $item
@@ -177,7 +177,7 @@ HTML
 
   public function test_if_else()
   {
-    $expect  = '<?xml version="1.0" encoding="UTF-8"?><?php if($foo):?><ul><li>yay</li><li>foo</li><li>worked</li></ul><?php else:?><p>hey! didnt work</p><?php endif;?>';
+    $expect  = '<?php if($foo):?><ul><li>yay</li><li>foo</li><li>worked</li></ul><?php else:?><p>hey! didnt work</p><?php endif;?>';
     $reality = $this->evalLeaf(
 <<<'HTML'
 - if $foo
@@ -195,7 +195,7 @@ HTML
 
   public function test_echoed()
   {
-    $expect  = '<?xml version="1.0" encoding="UTF-8"?><?php $foo = \'bar\';?><?php echo $foo;?><h1><?php echo $foo;?></h1>';
+    $expect  = '<?php $foo = \'bar\';?><?php echo $foo;?><h1><?php echo $foo;?></h1>';
     $reality = $this->evalLeaf(
 <<<'HTML'
 - $foo = 'bar'
@@ -209,7 +209,7 @@ HTML
 
   public function test_while()
   {
-    $expect  = '<?xml version="1.0" encoding="UTF-8"?><ul><?php while(true):?><li>item</li><?php endwhile;?></ul>';
+    $expect  = '<ul><?php while(true):?><li>item</li><?php endwhile;?></ul>';
     $reality = $this->evalLeaf(
 <<<HTML
 ul

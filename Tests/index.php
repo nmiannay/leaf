@@ -1,8 +1,8 @@
 <?php
-require '../autoload.php';
+require '../example/autoload.php';
 require 'test.class.php';
 
-stream_wrapper_register(ViewStream::SCHEME, 'ViewStream') or die("Failed to register protocol");
+\Leaf\Stream::init();
 
 $test_files = scandir(__DIR__);
 $startTime  = microtime(true);
