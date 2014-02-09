@@ -43,6 +43,18 @@ class Stream
   {
     return (!isset($this->options['cache']) || ((bool) $this->options['cache'] && $this->options['cache'] !== 'false'));
   }
+
+  public function stream_eof()
+  {
+    return ($this->eof);
+  }
+
+  public function stream_stat()
+  {
+    if (file_exists($this->getFilename())) {
+      return (stat($this->getFilename()));
+    }
+  }
   private function mergeWith($Parent_document)
   {
     $blocks       = $Parent_document->getElementsByTagNameNS('LeafTemplate', 'block');
@@ -123,18 +135,6 @@ class Stream
       }
     }
     return ('');
-  }
-
-  public function stream_eof()
-  {
-    return ($this->eof);
-  }
-
-  public function stream_stat()
-  {
-    if (file_exists($this->getFilename())) {
-      return (stat($this->getFilename()));
-    }
   }
 
   public function need_to_rebuild()

@@ -48,6 +48,7 @@ class LeafParser extends Parser
       $prev_input = $this->input;
       switch ($this->lookAhead()) {
         case '/':
+          $this->input = false;
         break;
         case '|':
           $Node = $this->parseText();
