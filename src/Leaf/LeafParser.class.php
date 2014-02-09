@@ -78,18 +78,23 @@ class LeafParser extends Parser
   {
     $token = $this->eat('/^(?<tagName>[\w]*)/');
     $Node  = $this->Stream->getTagsManager()->buildTag($token['tagName'] ?: 'div');
+
     while ($this->eatWhile('/^(\.|#)(?<value>[\w-]+)/', $attr) !== false) {
       $Node->addToAttribute($attr[0] == '#' ? 'id' : 'class', $attr['value']);
     }
     $attributes = array();
 
-    $this->rtrim(' ');
-    while ($this->eatWhile('/^(?<name>[a-zA-Z-]+?)=(["|\'])(?<value>.*?)\2/', $attr) !== false) {
-      $Node->addToAttribute($attr['name'], $attr['value']);
-      $this->rtrim(' ');
+    while ($this->eatWhile('/^\s*(?<name>[a-zA-Z-]+?)=(["|\'])(?<value>.*?)(?<!\\\)\2/', $attr) !== false) {
+      $Node->addToAttribute($attr['name'], stripslashes($attr['value']));
     }
-    if ($this->lookAhead() != '=') {
-      $content = $this->eat('/(?<text>.*)$/');
+    if ($this->eatWhile('/^\s*=/') !== false) {
+        $this->input = '=' . $this->input;
+
+        $Node->appendChild($this->parseEcho());
+    }
+    elseif ($this->input !== false) {
+      $content = $this->eat('/^\s+(?<text>.*)$/');
+
       if ($content['text']) {
         $Node->appendChild(new Nodes\Text($content['text']));
       }
@@ -121,13 +126,14 @@ class LeafParser extends Parser
   }
   private  function parsePureHTML()
   {
+    static $open = array();
+
     if ($this->lookAhead(1) == '/') {
-      // var_dump([$this->input, $this->stack[$this->stack_length - 2]->localName]);
-      $this->eat('/^<\/.+?>/');
+      $this->eat('/^<\/' . array_pop($open) . '>/');
       return (null);
     }
-    $entity = $this->eat('/^<(?<tagName>[a-zA-Z]+)/');
-    $Node   = $this->Stream->getTagsManager()->buildTag($entity['tagName']);
+    $entity  = $this->eat('/^<(?<tagName>[a-zA-Z]+)/');
+    $Node    = $this->Stream->getTagsManager()->buildTag($entity['tagName']);
 
     $this->rtrim(' ');
     while ($this->eatWhile('/^(?<name>[a-zA-Z-]+?)=(["|\'])(?<value>.*?)\2/', $attr) !== false) {
@@ -143,8 +149,12 @@ class LeafParser extends Parser
         if ($content[1] == '<') {
           $this->input = '<' . $this->input;
         }
+        elseif ($content[1]) {
+          return ($Node);
+        }
       }
     }
+    $open[] = $entity['tagName'];
     return ($Node);
   }
 
@@ -154,8 +164,17 @@ class LeafParser extends Parser
     $Template = $this->Stream->getTagsManager()->buildTemplate($block['name']);
 
     if ($this->lookAhead() == ':') {
-      $attr = $this->eat('/^:\s*(?<value>\'.+\'|".+"|[^"\'].*)/');
-      $Template->setAttribute('value', trim($attr['value'], '"\''));
+      $this->eat('/^:\s*/');
+      if ($this->lookAhead() == '\'') {
+        $attr = $this->eat('/^\'(?<value>.+?)(?<!\\\)\'/');
+      }
+      elseif ($this->lookAhead() == '"') {
+        $attr = $this->eat('/^"(?<value>.+?)(?<!\\\)"/');
+      }
+      else {
+        $attr = $this->eat('/^(?<value>.*)/');
+      }
+      $Template->setAttribute('value', stripslashes($attr['value']));
     }
     return ($Template);
   }

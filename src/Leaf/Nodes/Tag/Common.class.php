@@ -15,13 +15,15 @@ class Common extends \Leaf\Node
 
   public static function render(\Leaf\Node $Node)
   {
-    $html = array();
+    $html  = array();
+    $attrs = $Node->getAttributes_str();
 
     if (in_array($Node->localName, self::$self_closing)) {
-      return (sprintf("<$Node->localName%s />", $Node->getAttributes_str()));
+      return (sprintf("<$Node->localName%s/>", $attrs ? ' ' . $attrs : $attrs));
     }
     else {
-      $html[] = sprintf("<$Node->localName%s>", $Node->getAttributes_str());
+      $html[] = sprintf("<$Node->localName%s>", $attrs ? ' ' . $attrs : $attrs);
+
       foreach ($Node->childNodes as $Child) {
         $html[] = $Child->__toHtml();
       }

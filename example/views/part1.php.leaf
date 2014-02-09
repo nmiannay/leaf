@@ -1,15 +1,10 @@
 @extends: 'view.php.leaf'
 
 @block: testblock
-  div.test.#teplop class="tet" id="te"
+  div.test#teplop class="tet" id="te"
     | it works
   <div class="test">
     <div>
-      <ul>
-        <li><a>dsd</a></li>
-        <li><a>dsd</a></li>
-        <li><a>dsd</a></li>
-      </ul>
       @parent
     </div>
   </div>
