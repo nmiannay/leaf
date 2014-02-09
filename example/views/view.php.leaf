@@ -27,6 +27,7 @@ html
               td
                 @block:testblock
                   | parent content
+                  | parent content
       - else
         p
           | No items found.  Please add some inventory.
