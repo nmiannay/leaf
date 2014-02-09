@@ -35,7 +35,7 @@ class Stream
   public function getCachename() { return (self::CACHEDIR.str_replace('/', self::DIR_SEPARATOR, $this->getFilename())); }
   public function getTagsManager() { return ($this->TagsManager); }
 
-  public static function init()
+  public static function register()
   {
     stream_wrapper_register(self::SCHEME, 'Leaf\\Stream') or die("Failed to register protocol");
   }

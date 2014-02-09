@@ -19,7 +19,7 @@ and implemented for PHP 5.4.
 ## Usage
     require 'autoload.php';
 
-    stream_wrapper_register(ViewStream::SCHEME, 'ViewStream') or die("Failed to register protocol");
+    \Leaf\Stream::register(); // register streamWrapper
     include 'leaf://Views/part1.php';
 
 ## Syntax

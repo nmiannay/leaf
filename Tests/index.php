@@ -2,7 +2,7 @@
 require '../example/autoload.php';
 require 'test.class.php';
 
-\Leaf\Stream::init();
+\Leaf\Stream::register();
 
 $test_files = scandir(__DIR__);
 $startTime  = microtime(true);
