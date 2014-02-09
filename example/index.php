@@ -7,7 +7,7 @@ $author    = 'Miannay Nicolas';
 
 Leaf\Stream::register();
 
-include 'leaf://./views/part1.php.leaf?cache=false';
+include 'leaf://views/part1.php.leaf?cache=true';
 
 echo '<br/>'.number_format(microtime(true) - $startTime, 4), 's';
 ?>
