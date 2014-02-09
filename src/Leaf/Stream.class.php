@@ -72,8 +72,8 @@ class Stream
           $tplParent  = $ChildBlock->getElementsByTagNameNS('LeafTemplate', 'parent')->item(0);
 
           if ($tplParent !== null) {
-            foreach ($OldNode->childNodes as $OldChild) {
-              $tplParent->parentNode->replaceChild($OldChild, $tplParent);
+            while ($OldNode->childNodes->length > 0) {
+              $tplParent->appendChild($OldNode->childNodes->item(0));
             }
           }
         }
