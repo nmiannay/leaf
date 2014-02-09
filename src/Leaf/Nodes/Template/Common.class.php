@@ -3,12 +3,10 @@ namespace Leaf\Nodes\Template;
 
 class Common extends \Leaf\Node
 {
-  public $blockName;
 
   public function __construct($blockName)
   {
-    $this->blockName = $blockName;
-    parent::__construct('LeafTemplate:'.$blockName, null, 'leaf');
+    parent::__construct('LeafTemplate:'.$blockName, null, 'LeafTemplate');
   }
 
   public static function render(\Leaf\Node $Node)

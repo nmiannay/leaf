@@ -45,21 +45,24 @@ class Stream
   }
   private function mergeWith($Parent_document)
   {
-    $blocks       = $Parent_document->getElementsByTagNameNS('leaf', 'block');
-    $child_blocks = $this->Document->getElementsByTagNameNS('leaf', 'block');
+    $blocks       = $Parent_document->getElementsByTagNameNS('LeafTemplate', 'block');
+    $child_blocks = $this->Document->getElementsByTagNameNS('LeafTemplate', 'block');
 
     foreach ($blocks as $ParentBlock) {
       $blockId = $ParentBlock->getAttribute("value");
 
-      for ($i = $blocks->length - 1; $i >= 0; $i--) {
-        $ChildBlock = $blocks->item($i);
+      for ($i = $child_blocks->length - 1; $i >= 0; $i--) {
+        $ChildBlock = $child_blocks->item($i);
 
          if ($ChildBlock->getAttribute("value") == $blockId) {
-          $OldNode   = $ParentBlock->parentNode->replaceChild($ChildBlock, $ParentBlock);
-          $tplParent = $OldNode->getElementsByTagNameNS('leaf', 'parent')->item(0);
+          $ChildBlock = $Parent_document->importNode($ChildBlock, true);
+          $OldNode    = $ParentBlock->parentNode->replaceChild($ChildBlock, $ParentBlock);
+          $tplParent  = $ChildBlock->getElementsByTagNameNS('LeafTemplate', 'parent')->item(0);
 
           if ($tplParent !== null) {
-            $tplParent->parentNode->replaceChild($tplParent, $ChildBlock);
+            foreach ($OldNode->childNodes as $OldChild) {
+              $tplParent->parentNode->replaceChild($OldChild, $tplParent);
+            }
           }
         }
       }
@@ -84,13 +87,14 @@ class Stream
   public function buildDocument() {
     try {
       $Parser         = new LeafParser($this);
-      $template_nodes = $this->Document->getElementsByTagNameNS('leaf', 'extends');
+      $template_nodes = $this->Document->getElementsByTagNameNS('LeafTemplate', 'extends');
       $extends        = $template_nodes->item(0);
 
       if ($extends !== null && $extends->getAttribute('value')) {
         $val      = $extends->getAttribute('value');
         $new_file = $val[0] == '/' ? $val : ($this->url['host'] . dirname($this->url['path']) . DIRECTORY_SEPARATOR . $val);
         $Parent   = new Stream();
+
         $Parent->stream_open(sprintf('%s://%s', $this->url['scheme'], $new_file), $this->mode);
         $this->mergeWith($Parent->buildDocument());
       }
