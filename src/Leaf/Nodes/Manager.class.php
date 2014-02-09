@@ -12,8 +12,8 @@ class Manager
   private static $is_initialized = false;
   public function __construct(\Leaf\Document $Document) {
     $this->Document = $Document;
-    $Document->setManager($this);
 
+    $Document->setManager($this);
     if (!self::$is_initialized) {
       self::registerTagNode('doctype', 'Leaf\\Nodes\\Tag\\Doctype');
 
