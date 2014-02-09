@@ -1,0 +1,36 @@
+doctype html
+html
+  head
+    title Examples
+    meta name="keywords" content="template language"
+    meta name="author" content="author"
+    link type="text/css" rel="stylesheet" href="public/css/bootstrap.min.css"
+  body
+    h1 Markup examples
+    #content
+      p This example shows you how a ba<div>sic file looks like.
+
+
+      - if is_string($items)
+        p.error Must be an array!
+      - elseif !empty($items)
+        table
+          tbody
+            - foreach $items as $name => $price
+              tr
+                td.name = $name
+                td.price = $price
+                td > a.btn.btn-primary Buy
+                td test="#{$name}"
+          tfoot
+            tr
+              td
+                @block:testblock
+                  | parent content
+      - else
+        p
+          | No items found.  Please add some inventory.
+          | Thank you!
+    div id="footer"
+      @render: 'Views/footer.php.leaf'
+      | &Copyright &copy; #{$year} #{$author}
