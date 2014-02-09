@@ -123,7 +123,7 @@ class Stream
 
   public function stream_eof()
   {
-      return ($this->eof);
+    return ($this->eof);
   }
 
   public function stream_stat()

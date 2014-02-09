@@ -96,6 +96,9 @@ class LeafParser extends Parser
 
         $Node->appendChild($this->parseEcho());
     }
+    elseif ($this->eatWhile('/^\s>\s?/') !== false) {
+      return ($Node);
+    }
     elseif ($this->input !== false) {
       $content = $this->eat('/^\s+(?<text>.*)$/');
 

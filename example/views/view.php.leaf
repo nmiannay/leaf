@@ -20,7 +20,7 @@ html
               tr
                 td.name = $name
                 td.price = $price
-                td > button.btn-primary Buy
+                td > a.btn.btn-primary Buy
                 td test="#{$name}"
           tfoot
             tr
