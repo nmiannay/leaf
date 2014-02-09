@@ -7,7 +7,7 @@ class Loop extends \Leaf\Node
 {
   public $type;
 
-  public function __construct($type, $code, &$indent)
+  public function __construct($type, $code)
   {
     while (preg_match('/^\((.*)\)$/', $code)) {
       $code = substr($code, 1, -1);

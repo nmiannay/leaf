@@ -59,7 +59,7 @@ class LeafParser extends Parser
           $Node = $this->parseTemplating();
         break;
         case '-':
-          $Node = $this->parseCode($indent);
+          $Node = $this->parseCode();
         break;
         case '<':
           $Node = $this->parsePureHTML();
@@ -72,7 +72,7 @@ class LeafParser extends Parser
         $this->addToStack($Node, $indent);
       }
       if ($prev_input == $this->input) {
-        break;
+        throw new \Exception(sprintf("Parse error: Unxpected string `%s' on line %d", $this->input, $this->key() + 1), 1);
       }
       $indent += 2;
     }
@@ -122,11 +122,11 @@ class LeafParser extends Parser
 
     return (new Nodes\Code\Buffered($entity['output']));
   }
-  private  function parseCode(&$indent)
+  private  function parseCode()
   {
     $instruction = $this->eat('/^-\s*(?<type>\S+)\s*(?<attr>.*)$/');
 
-    return ($this->Stream->getTagsManager()->buildCode($instruction['type'], $instruction['attr'], $indent));
+    return ($this->Stream->getTagsManager()->buildCode($instruction['type'], $instruction['attr']));
   }
   private  function parsePureHTML()
   {

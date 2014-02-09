@@ -107,9 +107,9 @@ class Manager
     return ($Tag);
   }
 
-  public function buildCode($type, $value, &$indent) {
+  public function buildCode($type, $value) {
     if (isset(self::$Codes[$type])) {
-      $Tag = new self::$Codes[$type]($type, $value, $indent);
+      $Tag = new self::$Codes[$type]($type, $value);
     }
     else {
       $Tag = new Code\Common($type .' ' . $value);

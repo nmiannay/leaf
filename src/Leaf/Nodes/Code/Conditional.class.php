@@ -6,12 +6,8 @@ class Conditional extends \Leaf\Node
 
   public $type;
 
-  public function __construct($type, $code, &$indent)
+  public function __construct($type, $code)
   {
-
-    if ($this->type != 'else' && $this->type != 'elseif') {
-      $indent -= 2;
-    }
     if ($code) {
       while (preg_match('/^\((.*)\)$/', $code)) {
         $code = substr($code, 1, -1);
@@ -31,8 +27,6 @@ class Conditional extends \Leaf\Node
       $html  = array(sprintf('<?php %s: ?>', $type));
       $start = 0;
     }
-
-
     for ($i = $start; $i < $Node->childNodes->length; $i++) {
       $html[] = $Node->childNodes->item($i)->__toHtml();
     }
