@@ -12,11 +12,12 @@ class Stream
   private $mode;
   private $url;
   private $opened_path;
-  private $options = array();
-  private $eof     = false;
+  private $options       = array();
+  private $eof           = false;
+  private $current_index = 0;
+  private $is_builded    = false;
 
   private $TagsManager;
-  private $Error = null;
 
   const NS            = 'leaf';
   const SCHEME        = 'leaf';
@@ -25,7 +26,7 @@ class Stream
 
   public function __construct()
   {
-    $this->Document = new Document();
+    $this->Document    = new Document();
     $this->TagsManager = new Nodes\Manager($this->Document);
   }
 
@@ -42,9 +43,9 @@ class Stream
   {
     return (!isset($this->options['cache']) || ((bool) $this->options['cache'] && $this->options['cache'] !== 'false'));
   }
-  private function mergeWith(&$Parent)
+  private function mergeWith($Parent_document)
   {
-    $blocks       = $Parent->getDom()->getElementsByTagNameNS('leaf', 'block');
+    $blocks       = $Parent_document->getElementsByTagNameNS('leaf', 'block');
     $child_blocks = $this->Document->getElementsByTagNameNS('leaf', 'block');
 
     foreach ($blocks as $ParentBlock) {
@@ -63,52 +64,58 @@ class Stream
         }
       }
     }
-    return ($Parent->Document);
+    $this->Document = $Parent_document;
+    return ($Parent_document);
   }
 
-  public function stream_open($path, $mode, $options, &$opened_path)
+  public function stream_open($path, $mode, $options = array(), &$opened_path = null)
   {
     $this->url         = parse_url($path);
     $this->opened_path = $opened_path;
     $this->mode        = $mode;
-    $extended_file     = null;
 
+    if (isset($this->url['query'])) {
+      parse_str($this->url['query'], $output);
+      $this->options += $output;
+    }
+    return (true);
+  }
+
+  public function buildDocument() {
     try {
-      if (isset($this->url['query'])) {
-        parse_str($this->url['query'], $output);
-        $this->options += $output;
-      }
-      if ($this->need_to_rebuild()) {
-        $Parser         = new LeafParser($this);
-        $template_nodes = $this->Document->getElementsByTagNameNS('leaf', 'extends');
-        $extends        = $template_nodes->item(0);
+      $Parser         = new LeafParser($this);
+      $template_nodes = $this->Document->getElementsByTagNameNS('leaf', 'extends');
+      $extends        = $template_nodes->item(0);
 
-        if ($extends !== null && $extends->getAttribute('value')) {
-          $val      = $extends->getAttribute('value');
-          $new_file = $val[0] == '/' ? $val : ($this->url['host'] . dirname($this->url['path']) . DIRECTORY_SEPARATOR . $val);
-          $Parent   = new Stream();
-
-          $Parent->stream_open(sprintf('%s://%s', $this->url['scheme'], $new_file), $mode, $options, $opened_path);
-          $this->Document = $this->mergeWith($Parent);
-        }
+      if ($extends !== null && $extends->getAttribute('value')) {
+        $val      = $extends->getAttribute('value');
+        $new_file = $val[0] == '/' ? $val : ($this->url['host'] . dirname($this->url['path']) . DIRECTORY_SEPARATOR . $val);
+        $Parent   = new Stream();
+        $Parent->stream_open(sprintf('%s://%s', $this->url['scheme'], $new_file), $this->mode);
+        $this->mergeWith($Parent->buildDocument());
       }
-      return (true);
+      return ($this->Document);
     }
     catch (\Exception $E) {
-      $this->Error = new \Exception($E->getMessage(), $E->getCode());
-      return (false);
+      throw new \Exception($E->getMessage(), $E->getCode());
     }
   }
 
   public function stream_read($count)
   {
     if (!$this->eof || !$count) {
-      $this->eof = true;
-      if (!$this->need_to_rebuild()) {
-        return (file_get_contents($this->getCachename()));
+      if ($this->need_to_rebuild()) {
+        if (!$this->is_builded) {
+          $this->is_builded = $this->buildDocument();
+        }
+        $this->eof = ($this->Document->childNodes->length <= $this->current_index);
+        if (!$this->eof) {
+          return ($this->Document->childNodes->item($this->current_index++)->__toHTML());
+        }
       }
       else {
-        return ($this->Document->__toHtml($this));
+        $this->eof = true;
+        return (file_get_contents($this->getCachename()));
       }
     }
     return ('');
@@ -128,7 +135,7 @@ class Stream
 
   public function need_to_rebuild()
   {
-    return (!file_exists($this->getCachename()) || filemtime($this->getFilename()) > filemtime($this->getCachename()));
+    return (!$this->cache_is_active() || (!file_exists($this->getCachename()) || filemtime($this->getFilename()) > filemtime($this->getCachename())));
   }
 
   public function stream_flush()
@@ -139,12 +146,6 @@ class Stream
       }
       touch($this->getCachename(), filemtime($this->getFilename()));
       file_put_contents($this->getCachename(), $this->Document->__toHtml());
-    }
-  }
-  public function __destruct()
-  {
-    if ($this->Error !== null) {
-      throw $this->Error;
     }
   }
 }

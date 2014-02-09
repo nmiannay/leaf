@@ -41,10 +41,10 @@ abstract class Parser extends \SplFileObject
     }
     elseif (preg_match($accept, $this->input, $matches)) {
       $this->consumeInput(mb_strlen(array_shift($matches)));
+      // var_dump($this->dsqd());
       return ($matches);
     }
     else {
-      var_dump(debug_backtrace());
       throw new \Exception(sprintf("Parse error: syntax error on line %d, unexpected token `%s'", $this->key() + 1, $this->input), Parser::UNEXPECTED_TOKEN);
     }
   }

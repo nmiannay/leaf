@@ -72,7 +72,6 @@ class Manager
   }
 
    public function renderElement(\Leaf\Node $Node) {
-    // var_dump($Node->prefix);
     if ($Node->prefix == 'LeafTag') {
       if (isset(self::$Tags[$Node->localName])) {
         $class = self::$Tags[$Node->localName];

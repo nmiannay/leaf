@@ -72,7 +72,7 @@ class LeafParser extends Parser
         $this->addToStack($Node, $indent);
       }
       if ($prev_input == $this->input) {
-        throw new \Exception(sprintf("Parse error: Unxpected string `%s' on line %d", $this->input, $this->key() + 1), 1);
+        throw new \Exception(sprintf("syntax error on line %d, unexpected token `%s'", $this->key() + 1, $this->input), 1);
       }
       $indent += 2;
     }
