@@ -18,7 +18,7 @@ class Stream
   private $TagsManager;
   private $Error = null;
 
-  const TPL_NS        = 'http://xyz';
+  const NS            = 'leaf';
   const SCHEME        = 'leaf';
   const CACHEDIR      = '._Cache/';
   const DIR_SEPARATOR = '_';
@@ -108,7 +108,7 @@ class Stream
         return (file_get_contents($this->getCachename()));
       }
       else {
-        return ($this->Document->saveHTML());
+        return ($this->Document->__toHtml($this));
       }
     }
     return ('');

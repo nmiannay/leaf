@@ -6,29 +6,26 @@ class Common extends \Leaf\Node
 {
   private static $self_closing = array('meta', 'img', 'link', 'br', 'hr', 'input', 'area', 'base');
 
-  protected function getAttributes_str()
+  public function  __construct($tagName, $textContent = null)
   {
-    $str = array();
-    foreach ($this->attributes as $name => $value) {
-        $str[] = sprintf('%s="%s"', $name, addslashes($value));
-    }
-    return (isset($str[0]) ? ' '.implode(' ', $str) : '');
+    parent::__construct('LeafTag:' . $tagName, $textContent, 'Leaf');
   }
 
-  public function __toHTML()
+
+
+  public static function render(\Leaf\Node $Node)
   {
     $html = array();
 
-    if (in_array($this->tagName, self::$self_closing)) {
-      return (sprintf("<$this->tagName%s />", $this->getAttributes_str()));
+    if (in_array($Node->localName, self::$self_closing)) {
+      return (sprintf("<$Node->localName%s />", $Node->getAttributes_str()));
     }
     else {
-      $html[] = sprintf("<$this->tagName%s>", $this->getAttributes_str());
-      $html[] = htmlentities($this->value);
-      foreach ($this->childNodes as $Node) {
-        $html[] = $Node->__toHtml();
+      $html[] = sprintf("<$Node->localName%s>", $Node->getAttributes_str());
+      foreach ($Node->childNodes as $Child) {
+        $html[] = $Child->__toHtml();
       }
-      $html[] = "</$this->tagName>";
+      $html[] = "</$Node->localName>";
     }
     return (implode('', $html));
   }

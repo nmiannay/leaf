@@ -3,29 +3,28 @@ namespace Leaf\Nodes\Code;
 /**
 *
 */
-class Loop extends Common
+class Loop extends \Leaf\Node
 {
   public $type;
 
   public function __construct($type, $code, &$indent)
   {
-    $this->type  = $type;
-    parent::__construct($code);
-
     while (preg_match('/^\((.*)\)$/', $code)) {
-      $this->code = substr($code, 1, -1);
+      $code = substr($code, 1, -1);
     }
+    parent::__construct('LeafCode:loop', $code, 'leaf');
   }
-/*  public function __toHtml()
+
+  public static function render(\Leaf\Node $Node)
   {
-    $html = array("<?php $this->type($this->code):?>");
+    $type = $Node->getAttributeNS(\Leaf\Stream::NS, 'type');
+    $html = array(sprintf('<?php %s(%s): ?>', $type, $Node->firstChild->textContent));
 
-    foreach ($this->childNodes as $Node) {
-      $html[] = $Node->__toHtml();
+    for ($i = 1; $i < $Node->childNodes->length; $i++) {
+      $html[] = $Node->childNodes->item($i)->__toHtml();
     }
-    $html[] = "<?php end$this->type;?>";
+    $html[] = '<?php end' . $type . '; ?>';
     return (implode('', $html));
-  }*/
-
+  }
 }
 ?>

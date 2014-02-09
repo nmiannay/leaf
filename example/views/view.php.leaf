@@ -8,7 +8,7 @@ html
   body
     h1 Markup examples
     #content
-      p This example shows you how a basic file looks like.
+      p This example shows you how a ba<div>sic file looks like.
 
 
       - if is_string($items)
@@ -20,8 +20,8 @@ html
               tr
                 td.name = $name
                 td.price = $price
-                td > button:btn-primary Buy
-                td test=$name
+                td > button.btn-primary Buy
+                td test="#{$name}"
           tfoot
             tr
               td

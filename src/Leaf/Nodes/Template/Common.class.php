@@ -8,15 +8,15 @@ class Common extends \Leaf\Node
   public function __construct($blockName)
   {
     $this->blockName = $blockName;
-    parent::__construct('leaf:'.$blockName, null, 'leaf');
+    parent::__construct('LeafTemplate:'.$blockName, null, 'leaf');
   }
 
-  public function __toHTML()
+  public static function render(\Leaf\Node $Node)
   {
     $html = array();
 
-    foreach ($this->childNodes as $Node) {
-      $html[] = $Node->__toHtml();
+    foreach ($Node->childNodes as $Child) {
+      $html[] = $Child->__toHtml();
     }
     return (implode('', $html));
   }

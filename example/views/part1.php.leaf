@@ -5,6 +5,11 @@
     | it works
   <div class="test">
     <div>
+      <ul>
+        <li><a>dsd</a></li>
+        <li><a>dsd</a></li>
+        <li><a>dsd</a></li>
+      </ul>
       @parent
     </div>
   </div>

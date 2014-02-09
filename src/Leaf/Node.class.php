@@ -4,11 +4,8 @@ namespace Leaf;
 class Node extends \DomElement
 {
 
-  private $childClass;
   public function __construct($tag, $content = null, $ns = null)
   {
-    $this->childClass = get_called_class();
-    // var_dump($this->childClass);
     parent::__construct($tag, $content, $ns);
   }
   public function addToAttribute($key, $value)
@@ -16,9 +13,20 @@ class Node extends \DomElement
     $oldVal = $this->getAttribute($key);
     $this->setAttribute($key, ($oldVal ? $oldVal . ' ' : '') . $value);
   }
+  protected function getAttributes_str()
+  {
+    $str = array();
+
+    foreach ($this->attributes as $Attribute) {
+      $value = preg_replace('/#{\$(\w+)}/', '<?php echo $$1; ?>', $Attribute->value);
+      $str[] = sprintf('%s="%s"', $Attribute->name, $value);
+    }
+    return (isset($str[0]) ? ' '.implode(' ', $str) : '');
+  }
+
   public function __toHTML()
   {
-    var_dump($this->childClass);
+    return ($this->ownerDocument->getManager()->renderElement($this));
   }
 }
 ?>

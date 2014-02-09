@@ -43,6 +43,7 @@ class LeafParser extends Parser
     if ($indent % self::TAB_INDENT != 0 || ($this->prev_indent - $indent <= 0 && $indent + self::TAB_INDENT == $this->prev_indent)) {
       throw new \Exception(sprintf("Malformed indetation on line %d", $this->key() + 1), 1);
     }
+    $this->prev_indent = $indent;
     while ($this->input !== false) {
       switch ($this->lookAhead()) {
         case '/':
@@ -69,7 +70,6 @@ class LeafParser extends Parser
       if ($Node !== null) {
         $this->addToStack($Node, $indent);
       }
-      $this->prev_indent = $indent;
       $indent += 2;
     }
   }
@@ -84,13 +84,15 @@ class LeafParser extends Parser
     $attributes = array();
 
     $this->rtrim(' ');
-    while ($this->eatWhile('/^(?<name>[a-zA-Z-]+?)=(["|\'])(?<value>.+?)\2/', $attr) !== false) {
+    while ($this->eatWhile('/^(?<name>[a-zA-Z-]+?)=(["|\'])(?<value>.*?)\2/', $attr) !== false) {
       $Node->addToAttribute($attr['name'], $attr['value']);
       $this->rtrim(' ');
     }
-    $content = $this->eat('/(?<text>.*)$/');
-    if ($content['text']) {
-      $Node->appendChild(new Nodes\Text($content['text']));
+    if ($this->lookAhead() != '=') {
+      $content = $this->eat('/(?<text>.*)$/');
+      if ($content['text']) {
+        $Node->appendChild(new Nodes\Text($content['text']));
+      }
     }
     return ($Node);
   }
@@ -107,34 +109,41 @@ class LeafParser extends Parser
 
   private  function parseEcho()
   {
-    $text = $this->eatUntil(PHP_EOL);
+    $entity = $this->eat('/^=\s*(?<output>.*);?$/');
 
-    return (new Nodes\Code\Common('echo ' . $text . ';'));
+    return (new Nodes\Code\Buffered($entity['output']));
   }
   private  function parseCode(&$indent)
   {
-    $instruction = $this->eat('/^-\s*(?<type>\S+)\s*(?<attr>.*)/');
+    $instruction = $this->eat('/^-\s*(?<type>\S+)\s*(?<attr>.*)$/');
 
     return ($this->Stream->getTagsManager()->buildCode($instruction['type'], $instruction['attr'], $indent));
   }
   private  function parsePureHTML()
   {
     if ($this->lookAhead(1) == '/') {
-      $this->eat('/^<\/' . $this->stack[$this->stack_length - 2]->tagName . '>/');
+      // var_dump([$this->input, $this->stack[$this->stack_length - 2]->localName]);
+      $this->eat('/^<\/.+?>/');
       return (null);
     }
     $entity = $this->eat('/^<(?<tagName>[a-zA-Z]+)/');
     $Node   = $this->Stream->getTagsManager()->buildTag($entity['tagName']);
 
     $this->rtrim(' ');
-    while ($this->eatWhile('/^(?<name>[a-zA-Z-]+?)=(["|\'])(?<value>.+?)\2/', $attr) !== false) {
+    while ($this->eatWhile('/^(?<name>[a-zA-Z-]+?)=(["|\'])(?<value>.*?)\2/', $attr) !== false) {
       $Node->addToAttribute($attr['name'], $attr['value']);
       $this->rtrim(' ');
     }
     $this->eat('/^\/?>/');
     if ($this->lookAhead() !== '<' && $this->lookAhead() !== false) {
-      $this->input = '|' . $this->input;
-      $this->parseText();
+      $content = $this->eat('/^(?<text>.*?)(<\/' . $entity['tagName'] . '>|<|$)/');
+
+      if (isset($content['text'])) {
+        $Node->appendChild(new Nodes\Text($content['text']));
+        if ($content[1] == '<') {
+          $this->input = '<' . $this->input;
+        }
+      }
     }
     return ($Node);
   }

@@ -12,6 +12,7 @@ class Manager
   private static $is_initialized = false;
   public function __construct(\Leaf\Document $Document) {
     $this->Document = $Document;
+    $Document->setManager($this);
 
     if (!self::$is_initialized) {
       self::registerTagNode('doctype', 'Leaf\\Nodes\\Tag\\Doctype');
@@ -29,16 +30,6 @@ class Manager
     }
     $this->Document->registerNodeClass('DomText', 'Leaf\\Nodes\\Text');
     $this->Document->registerNodeClass('DOMElement', 'Leaf\\Node');
-    // foreach (self::$Tags as $class) {
-
-    //   $this->Document->registerNodeClass('DOMElement', $class);
-    // }
-    // foreach (self::$Templates as $class) {
-    //   $this->Document->registerNodeClass('DOMElement', $class);
-    // }
-    // foreach (self::$Codes as $class) {
-    //   $this->Document->registerNodeClass('DOMElement', $class);
-    // }
   }
   public static function registerTagNode($tagName, $class)
   {
@@ -80,6 +71,31 @@ class Manager
     return ($Tag);
   }
 
+   public function renderElement(\Leaf\Node $Node) {
+    // var_dump($Node->prefix);
+    if ($Node->prefix == 'LeafTag') {
+      if (isset(self::$Tags[$Node->localName])) {
+        $class = self::$Tags[$Node->localName];
+        return ($class::render($Node));
+      }
+      return (Tag\Common::render($Node));
+    }
+    else if ($Node->prefix == 'LeafTemplate') {
+      if (isset(self::$Templates[$Node->localName])) {
+        $class = self::$Templates[$Node->localName];
+        return ($class::render($Node));
+      }
+      return (Template\Common::render($Node));
+    }
+    else if ($Node->prefix == 'LeafCode') {
+      $class_name = 'Leaf\\Nodes\\Code\\' . ucfirst($Node->localName);
+      if (class_exists($class_name)) {
+        return ($class_name::render($Node));
+      }
+      return (Code\Common::render($Node));
+    }
+  }
+
   public function buildTemplate($blockName) {
     if (isset(self::$Templates[$blockName])) {
       $Tag = new self::$Templates[$blockName]($blockName);
@@ -93,8 +109,13 @@ class Manager
 
   public function buildCode($type, $value, &$indent) {
     if (isset(self::$Codes[$type])) {
-      return (new self::$Codes[$type]($type, $value, $indent));
+      $Tag = new self::$Codes[$type]($type, $value, $indent);
     }
-    return (new Code\Common($type .' ' . $value));
+    else {
+      $Tag = new Code\Common($type .' ' . $value);
+    }
+    $this->Document->appendChild($Tag);
+    $Tag->setAttributeNS(\Leaf\Stream::NS, 'type', $type);
+    return ($Tag);
   }
 }

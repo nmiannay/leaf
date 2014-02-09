@@ -11,8 +11,8 @@ class Doctype extends Common
     parent::__construct('doctype');
   }
 
-  public function __toHtml()
+  public static function render(\Leaf\Node $Node)
   {
-    return (sprintf("<!DOCTYPE $this->doctype>"));
+    return (sprintf("<!DOCTYPE %s>", $Node->nodeValue));
   }
 }

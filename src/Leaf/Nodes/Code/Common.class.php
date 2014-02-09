@@ -5,20 +5,17 @@ namespace Leaf\Nodes\Code;
 */
 class Common extends \Leaf\Node
 {
-  protected $code = null;
-
   public function __construct($code)
   {
-    $this->code = $code;
-    parent::__construct('leaf:code', null, 'leaf');
+    parent::__construct('LeafCode:common', $code, 'leaf');
   }
 
-  public function __toHTML()
+  public static function render(\Leaf\Node $Node)
   {
     $html   = array('<?php ');
-    $html[] = trim($this->code, ';').';';
-    foreach ($this->childNodes as $Node) {
-      $html[] = $Node->__toHtml();
+    $html[] = trim($Node->nodeValue, ';').';';
+    foreach ($Node->childNodes as $Child) {
+      $html[] = $Child->__toHtml();
     }
     $html[] = '?>';
     return (implode('', $html));

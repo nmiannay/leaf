@@ -1,41 +1,44 @@
 <?php
 namespace Leaf\Nodes\Code;
 
-class Conditional extends Common
+class Conditional extends \Leaf\Node
 {
 
   public $type;
 
   public function __construct($type, $code, &$indent)
   {
-    $this->type  = $type;
-    parent::__construct($code);
 
     if ($this->type != 'else' && $this->type != 'elseif') {
       $indent -= 2;
     }
     if ($code) {
       while (preg_match('/^\((.*)\)$/', $code)) {
-        $this->code = substr($code, 1, -1);
+        $code = substr($code, 1, -1);
       }
     }
+    parent::__construct('LeafCode:conditional', $code, 'leaf');
   }
-/*  public function __toHtml()
+
+  public static function render(\Leaf\Node $Node)
   {
-    if ($this->type == 'else') {
-      $html = array("<?php $this->type:?>");
+    $type = $Node->getAttributeNS(\Leaf\Stream::NS, 'type');
+    if ($type != 'else') {
+      $html  = array(sprintf('<?php %s(%s): ?>', $type, $Node->firstChild->textContent));
+      $start = 1;
     }
     else {
-      $html = array("<?php $this->type($this->code):?>");
+      $html  = array(sprintf('<?php %s: ?>', $type));
+      $start = 0;
     }
 
-    foreach ($this->childNodes as $Node) {
-      $html[] = $Node->__toHtml();
+    for ($i = $start; $i < $Node->childNodes->length; $i++) {
+      $html[] = $Node->childNodes->item($i)->__toHtml();
     }
-    if ($this->type != 'else' && $this->type != 'elseif') {
-      $html[] = '<?php endif;?>';
+    if ($Node->nextSibling->tagName != 'LeafCode:conditional') {
+      $html[] = '<?php endif; ?>';
     }
     return (implode('', $html));
-  }*/
+  }
 
 }
