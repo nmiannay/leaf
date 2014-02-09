@@ -18,8 +18,8 @@ class Node extends \DomElement
     $str = array();
 
     foreach ($this->attributes as $Attribute) {
-      $value = htmlentities($Attribute->value, ENT_COMPAT | ENT_HTML5, 'UTF-8', false);
-      $value = (preg_replace('/&num;&lbrace;&dollar;(\w+)&rcub;/', '<?php echo $$1; ?>', $value));
+      $value = htmlspecialchars($Attribute->value, ENT_COMPAT | ENT_HTML5, 'UTF-8', false);
+      $value = (preg_replace('/#{\$(\w+)}/', '<?php echo $$1; ?>', $value));
       $str[] = sprintf('%s="%s"', $Attribute->name, $value);
     }
     return (implode(' ', $str));

@@ -11,8 +11,6 @@ class Common extends \Leaf\Node
     parent::__construct('LeafTag:' . $tagName, $textContent, 'Leaf');
   }
 
-
-
   public static function render(\Leaf\Node $Node)
   {
     $html  = array();

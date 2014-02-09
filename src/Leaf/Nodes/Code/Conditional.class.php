@@ -32,10 +32,11 @@ class Conditional extends \Leaf\Node
       $start = 0;
     }
 
+
     for ($i = $start; $i < $Node->childNodes->length; $i++) {
       $html[] = $Node->childNodes->item($i)->__toHtml();
     }
-    if ($Node->nextSibling->tagName != 'LeafCode:conditional') {
+    if (!$Node->nextSibling || ($Node->nextSibling->tagName != 'LeafCode:conditional' || $Node->nextSibling->getAttributeNS(\Leaf\Stream::NS, 'type') == 'if')) {
       $html[] = '<?php endif; ?>';
     }
     return (implode('', $html));

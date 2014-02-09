@@ -29,7 +29,7 @@ class LeafParser extends Parser
     if ($depth == 0) {
         $this->Stream->getDom()->appendChild($Node);
     }
-    else {
+    else if ($this->stack_length > 0){
       $this->stack[$this->stack_length - 1]->appendChild($Node);
     }
     $this->stack[$this->stack_length++] = $Node;
@@ -45,6 +45,7 @@ class LeafParser extends Parser
     }
     $this->prev_indent = $indent;
     while ($this->input !== false) {
+      $prev_input = $this->input;
       switch ($this->lookAhead()) {
         case '/':
         break;
@@ -69,6 +70,9 @@ class LeafParser extends Parser
       }
       if ($Node !== null) {
         $this->addToStack($Node, $indent);
+      }
+      if ($prev_input == $this->input) {
+        break;
       }
       $indent += 2;
     }

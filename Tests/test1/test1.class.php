@@ -72,7 +72,7 @@ HTML
 
   public function test_echo()
   {
-    $expect  = '<p><?php echo $something;?></p>';
+    $expect  = '<p><?php echo $something; ?></p>';
     $reality = $this->evalLeaf(
 <<<'HTML'
 p
@@ -84,7 +84,7 @@ HTML
 
   public function test_nesting()
   {
-    $expect  = '<ul><li>one</li><li><?php echo $two;?></li><li>three</li></ul>';
+    $expect  = '<ul><li>one</li><li><?php echo $two; ?></li><li>three</li></ul>';
     $reality = $this->evalLeaf(
 <<<'HTML'
 ul
@@ -138,7 +138,7 @@ HTML
 //COMMENT
   public function test_comment()
   {
-    $expect  = '<?php $foo = "bar";?><p><?php echo $foo;?></p>';
+    $expect  = '<?php $foo = "bar"; ?><p><?php echo $foo; ?></p>';
     $reality = $this->evalLeaf(
 <<<'HTML'
 / TODO
@@ -156,7 +156,7 @@ HTML
 //CODE
   public function test_affectation()
   {
-    $expect  = '<?php var $foo = \'bar\';?>';
+    $expect  = '<?php var $foo = \'bar\'; ?>';
     $reality = $this->evalLeaf('- var $foo = \'bar\';');
 
     $this->assertEqual($reality, $expect);
@@ -164,7 +164,7 @@ HTML
 
   public function test_foreach()
   {
-    $expect  = '<?php foreach($items as $item):?><p><?php echo $item;?></p><?php endforeach;?>';
+    $expect  = '<?php foreach($items as $item): ?><p><?php echo $item; ?></p><?php endforeach; ?>';
     $reality = $this->evalLeaf(
 <<<'HTML'
 - foreach $items as $item
@@ -177,7 +177,7 @@ HTML
 
   public function test_if_else()
   {
-    $expect  = '<?php if($foo):?><ul><li>yay</li><li>foo</li><li>worked</li></ul><?php else:?><p>hey! didnt work</p><?php endif;?>';
+    $expect  = '<?php if($foo): ?><ul><li>yay</li><li>foo</li><li>worked</li></ul><?php else: ?><p>hey! didnt work</p><?php endif; ?>';
     $reality = $this->evalLeaf(
 <<<'HTML'
 - if $foo
@@ -195,7 +195,7 @@ HTML
 
   public function test_echoed()
   {
-    $expect  = '<?php $foo = \'bar\';?><?php echo $foo;?><h1><?php echo $foo;?></h1>';
+    $expect  = '<?php $foo = \'bar\'; ?><?php echo $foo; ?><h1><?php echo $foo; ?></h1>';
     $reality = $this->evalLeaf(
 <<<'HTML'
 - $foo = 'bar'
@@ -209,7 +209,7 @@ HTML
 
   public function test_while()
   {
-    $expect  = '<ul><?php while(true):?><li>item</li><?php endwhile;?></ul>';
+    $expect  = '<ul><?php while(true): ?><li>item</li><?php endwhile; ?></ul>';
     $reality = $this->evalLeaf(
 <<<HTML
 ul
