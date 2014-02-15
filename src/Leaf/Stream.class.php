@@ -19,9 +19,9 @@ class Stream
 
   private $TagsManager;
 
-  const NS            = 'leaf';
-  const SCHEME        = 'leaf';
-  const CACHEDIR      = '._Cache/';
+  public static $NS       = 'leaf';
+  public static $SCHEME   = 'leaf';
+  public static $CACHEDIR = '._Cache/';
   const DIR_SEPARATOR = '_';
 
   public function __construct()
@@ -31,13 +31,13 @@ class Stream
   }
 
   public function getDom() { return ($this->Document); }
-  public function getFilename() { return ($this->opened_path ?: $this->url['host'].(isset($this->url['path']) ? $this->url['path'] : '')); }
-  public function getCachename() { return (self::CACHEDIR.str_replace('/', self::DIR_SEPARATOR, $this->getFilename())); }
+  public function getFilename() { return ($this->opened_path ?: ($this->url['scheme']? : '').(isset($this->url['path']) ? $this->url['path'] : '')); }
+  public function getCachename() { return (self::$CACHEDIR.str_replace('/', self::DIR_SEPARATOR, $this->getFilename())); }
   public function getTagsManager() { return ($this->TagsManager); }
 
-  public static function register()
+  public static function __load()
   {
-    stream_wrapper_register(self::SCHEME, 'Leaf\\Stream') or die("Failed to register protocol");
+    stream_wrapper_register(self::$SCHEME, 'Leaf\\Stream') or die("Failed to register protocol");
   }
   public function cache_is_active()
   {
@@ -46,7 +46,7 @@ class Stream
 
   public function stream_eof()
   {
-    return ($this->eof);
+    return ((bool)$this->eof);
   }
 
   public function stream_stat()
@@ -85,7 +85,7 @@ class Stream
 
   public function stream_open($path, $mode, $options = array(), &$opened_path = null)
   {
-    $this->url         = parse_url($path);
+    $this->url         = parse_url(substr($path, strlen(self::$SCHEME) + 3));
     $this->opened_path = $opened_path;
     $this->mode        = $mode;
 
@@ -93,6 +93,7 @@ class Stream
       parse_str($this->url['query'], $output);
       $this->options += $output;
     }
+    $this->url['scheme'] = isset($this->url['scheme']) ? $this->url['scheme'] . ':' : '';
     return (true);
   }
 
@@ -104,10 +105,10 @@ class Stream
 
       if ($extends !== null && $extends->getAttribute('value')) {
         $val      = $extends->getAttribute('value');
-        $new_file = $val[0] == '/' ? $val : ($this->url['host'] . dirname($this->url['path']) . DIRECTORY_SEPARATOR . $val);
+        $new_file = $val[0] == '/' ? $val : (($this->url['scheme']? : '') . dirname($this->url['path']) . DIRECTORY_SEPARATOR . $val);
         $Parent   = new Stream();
 
-        $Parent->stream_open(sprintf('%s://%s', $this->url['scheme'], $new_file), $this->mode);
+        $Parent->stream_open(sprintf('%s://%s', self::$SCHEME, $new_file), $this->mode);
         $this->mergeWith($Parent->buildDocument());
       }
       return ($this->Document);
@@ -145,8 +146,8 @@ class Stream
   public function stream_flush()
   {
     if ($this->cache_is_active() && $this->need_to_rebuild()) {
-      if (!file_exists(self::CACHEDIR)) {
-        mkdir(self::CACHEDIR);
+      if (!file_exists(self::$CACHEDIR)) {
+        mkdir(self::$CACHEDIR);
       }
       touch($this->getCachename(), filemtime($this->getFilename()));
       file_put_contents($this->getCachename(), $this->Document->__toHtml());

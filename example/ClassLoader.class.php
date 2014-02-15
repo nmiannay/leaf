@@ -14,15 +14,17 @@ class ClassLoader
   }
   public static  function registerNamespaces(array $namespaces)
   {
-    self::$namespaces += $namespaces;
+    foreach ($namespaces as $namespace => $path) {
+      self::$namespaces[$namespace] = (array)$path;
+    }
   }
   public static  function registerNamespace($namespace, $path)
   {
-    self::$namespaces[$namespace] = $path;
+    self::$namespaces[$namespace] = (array)$path;
   }
   public static function register()
   {
-    spl_autoload_register(array('ClassLoader', 'loadClass'));
+    spl_autoload_register(array('library\ClassLoader', 'loadClass'));
   }
 
   public static function loadClass($class)
@@ -30,22 +32,30 @@ class ClassLoader
     if (false !== ($pos = strripos($class, '\\'))) {
       $namespace = substr($class, 0, $pos);
 
-      foreach (self::$namespaces as $ns => $dir) {
+      foreach (self::$namespaces as $ns => $dirs) {
         if (0 === strpos($namespace, $ns)) {
-          $class = substr($class, $pos + 1);
-          $file  = $dir.DIRECTORY_SEPARATOR.str_replace('\\', DIRECTORY_SEPARATOR, $namespace).DIRECTORY_SEPARATOR.str_replace('_', DIRECTORY_SEPARATOR, $class).'.class.php';
-          if (file_exists($file)) {
-            require $file;
+          foreach ($dirs as $dir) {
+            $file = str_replace('\\', __DS__, $dir . __DS__ . $namespace) . __DS__ . substr($class, $pos + 1) . '.class.php';
+
+            if (file_exists($file)) {
+              require $file;
+              if (method_exists($class, '__load')) {
+                $class::__load();
+              }
+            }
+            return;
           }
-          return;
         }
       }
     }
-    else
-    {
-      $file = __DIR__.DIRECTORY_SEPARATOR.str_replace('_', DIRECTORY_SEPARATOR, $class).'.class.php';
+    else {
+      $file = __DIR__ . __DS__ . $class . '.class.php';
+
       if (file_exists($file)) {
         require $file;
+        if (method_exists($class, '__load')){
+          $class::__load();
+        }
       }
     }
   }

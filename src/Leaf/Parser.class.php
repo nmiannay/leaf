@@ -6,6 +6,7 @@ namespace Leaf;
 abstract class Parser extends \SplFileObject
 {
 
+  protected $filename     = '';
   protected $charno       = 0;
   protected $line         = '';
   protected $input        = '';
@@ -20,7 +21,8 @@ abstract class Parser extends \SplFileObject
   {
     parent::__construct($filename);
     $this->setFlags(\SplFileObject::DROP_NEW_LINE);
-    $this->line = parent::current();
+    $this->line     = parent::current();
+    $this->filename = $filename;
   }
 
 
@@ -41,11 +43,11 @@ abstract class Parser extends \SplFileObject
     }
     elseif (preg_match($accept, $this->input, $matches)) {
       $this->consumeInput(mb_strlen(array_shift($matches)));
-      // var_dump($this->dsqd());
       return ($matches);
     }
     else {
-      throw new \Exception(sprintf("Parse error: syntax error on line %d, unexpected token `%s'", $this->key() + 1, $this->input), Parser::UNEXPECTED_TOKEN);
+      var_dump(debug_backtrace());
+      throw new \Exception(sprintf("Parse error: syntax error on line %d, unexpected token `%s' in `%s'", $this->key() + 1, $this->input, $this->filename), Parser::UNEXPECTED_TOKEN);
     }
   }
   protected function eatWhile($accept = null, &$matches = null)
@@ -100,7 +102,7 @@ abstract class Parser extends \SplFileObject
   {
     parent::rewind();
     $this->charno = 0;
-    $this->input = $this->line   = parent::current();
+    $this->input = $this->line = parent::current();
     if ($this->line == '') {
       $this->next();
     }
