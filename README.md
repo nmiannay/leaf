@@ -19,8 +19,9 @@ and implemented for PHP 5.4.
 ## Usage
     require 'autoload.php';
 
-    \Leaf\Stream::register(); // register streamWrapper
     include 'leaf://Views/part1.php';
+    
+Note: Call \Leaf\Stream::__load() to register the stream wrapper if you don't use my autoload
 
 ## Syntax
 
