@@ -73,7 +73,7 @@ class LeafParser extends Parser
         $this->addToStack($Node, $indent);
       }
       if ($prev_input == $this->input) {
-        throw new \Exception(sprintf("syntax error on line %d, unexpected token `%s'", $this->key() + 1, $this->input), 1);
+        throw new \Exception(sprintf("syntax error on line %d, unexpected token `%s' in `%s'", $this->key() + 1, $this->input, $this->filename), 1);
       }
       $indent += 2;
     }
@@ -140,7 +140,7 @@ class LeafParser extends Parser
       $this->eat('/^<\/' . array_pop($open) . '>/');
       return (null);
     }
-    $entity  = $this->eat('/^<(?<tagName>[a-zA-Z]+)/');
+    $entity  = $this->eat('/^<(?<tagName>[\w]+)/');
     $Node    = $this->Stream->getTagsManager()->buildTag($entity['tagName']);
 
     $this->rtrim(' ');
@@ -149,9 +149,8 @@ class LeafParser extends Parser
       $this->rtrim(' ');
     }
     $this->eat('/^\/?>/');
-    if ($this->lookAhead() !== '<' && $this->lookAhead() !== false) {
+    if ($this->lookAhead() !== '<' && $this->lookAhead() !== PHP_EOL) {
       $content = $this->eat('/^(?<text>.*?)(<\/' . $entity['tagName'] . '>|<|$)/');
-
       if (isset($content['text'])) {
         $Node->appendChild(new Nodes\Text($content['text']));
         if ($content[1] == '<') {
@@ -162,7 +161,9 @@ class LeafParser extends Parser
         }
       }
     }
-    $open[] = $entity['tagName'];
+    if (!$Node->is_selfClosing()) {
+      $open[] = $entity['tagName'];
+    }
     return ($Node);
   }
 

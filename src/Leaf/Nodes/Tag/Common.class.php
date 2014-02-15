@@ -29,5 +29,10 @@ class Common extends \Leaf\Node
     }
     return (implode('', $html));
   }
+
+  public function is_selfClosing()
+  {
+    return (in_array($this->localName, self::$self_closing));
+  }
 }
 ?>
