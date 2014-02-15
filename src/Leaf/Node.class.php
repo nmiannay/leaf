@@ -27,6 +27,7 @@ class Node extends \DomElement
 
   public function __toHTML()
   {
+    // var_dump($this->ownerDocument->getManager()->renderElement($this));
     return ($this->ownerDocument->getManager()->renderElement($this));
   }
 }
